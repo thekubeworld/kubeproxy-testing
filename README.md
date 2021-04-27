@@ -1,7 +1,7 @@
 # kubeproxy-testing
 A repo for testing kube-proxy bits
 
-**1)** Download the [k8devel Go library for Kubernetes](github.com/thekubeworld/k8devel)
+**1)** Download the [k8devel Go library for Kubernetes](https://github.com/thekubeworld/k8devel)
 ```
 $ go get github.com/thekubeworld/k8devel
 ```
