@@ -53,7 +53,7 @@ func main() {
         c := k8devel.Client{}
 	c.Namespace = "kptesting"
 	c.NumberMaxOfAttemptsPerTask = 5
-        c.TimeoutTaksInSec = 1
+        c.TimeoutTaksInSec = 2
 
 	// Connect to cluster from:
 	//	- $HOME/kubeconfig (Linux)
