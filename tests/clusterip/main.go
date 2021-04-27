@@ -48,6 +48,7 @@ func main() {
 	logrus.Infof("|                              |")
 	logrus.Infof("| kubernetes cluster           |")
 	logrus.Infof("+------------------------------+")
+	logrus.Infof("\n")
 
 	// Initial set
         c := k8devel.Client{}
@@ -63,17 +64,26 @@ func main() {
 	// kube-proxy is a DaemonSet, it will replicate the pod
 	// data to all nodes. Let's find one pod name to use and
 	// collect data.
+	KP := "kube-proxy"
+	namespaceKP := "kube-system"
 	kyPods, kyNumberPods := k8devel.FindPodsWithNameContains(&c,
-		"kube-proxy",
-		"kube-system")
+		KP,
+		namespaceKP)
 	if kyNumberPods < 0 {
 		logrus.Fatal("exiting... unable to find kube-proxy pod..")
 	}
+	logrus.Infof("Found the following kube-proxy pods:")
+	logrus.Infof("\t\tnamespace: %s", namespaceKP)
+	logrus.Infof("\t\t%s", kyPods)
 
-	kpMode, err := k8devel.DetectKubeProxyMode(&c, "kube-proxy", "kube-system")
+	// Detect Kube-proxy mode
+	kpMode, err := k8devel.DetectKubeProxyMode(&c,
+			KP,
+			namespaceKP)
 	if err != nil {
 		logrus.Fatal(err)
 	}
+	logrus.Infof("\n")
 	logrus.Infof("Detected kube-proxy mode: %s", kpMode)
 
 	// TODO: use flags
