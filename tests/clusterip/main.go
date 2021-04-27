@@ -17,7 +17,7 @@ limitations under the License.
 package main
 
 import (
-	"github.com/dougsland/k8devel"
+	"github.com/thekubeworld/k8devel"
 	"github.com/sirupsen/logrus"
 	"github.com/gookit/color"
 )
