@@ -52,7 +52,7 @@ func main() {
 	// Initial set
         c := k8devel.Client{}
 	c.Namespace = "kptesting"
-	c.NumberMaxOfAttemptsPerTask = 5
+	c.NumberMaxOfAttemptsPerTask = 10
         c.TimeoutTaksInSec = 2
 
 	// Connect to cluster from:
