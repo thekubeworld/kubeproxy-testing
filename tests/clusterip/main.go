@@ -70,6 +70,12 @@ func main() {
 		logrus.Fatal("exiting... unable to find kube-proxy pod..")
 	}
 
+	kpMode, err := k8devel.DetectKubeProxyMode(&c, "kube-proxy", "kube-system")
+	if err != nil {
+		logrus.Fatal(err)
+	}
+	logrus.Infof("Detected kube-proxy mode: %s", kpMode)
+
 	// TODO: use flags
 	// START: kube-proxy variables
 	KPTestContainerName := kyPods[0]
