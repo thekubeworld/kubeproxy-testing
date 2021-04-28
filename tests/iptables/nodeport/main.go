@@ -44,7 +44,7 @@ func main() {
 	logrus.Infof("     | | kubernetes cluster             |   |    ")
 	logrus.Infof("     | +--------------------------------+   |    ")
 	logrus.Infof(" +---|--------------------------------------|--+ ")
-	logrus.Infof(" |   |                                      |  | ")
+	logrus.Infof(" |   |            kube-proxy                |  | ")
         logrus.Infof(" |   |                                      |  | ")
 	logrus.Infof(" | +-----------+      +-----------+         |  | ")
 	logrus.Infof(" | | Node Port |      | Node port |---------+  | ")
