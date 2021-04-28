@@ -220,6 +220,8 @@ func main() {
 		Image: "nginx",
 		Command: PodCommandInitBash,
 		CommandArgs: SleepOneDay,
+		LabelKey: "app",
+                LabelValue: "kptesting",
 	}
 
 	logrus.Infof("\n")
