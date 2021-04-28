@@ -114,7 +114,7 @@ func main() {
 		logrus.Fatal("exiting... unable to find kube-proxy pod..")
 	}
 	logrus.Infof("Found the following kube-proxy pods:")
-	logrus.Infof("\t\tnamespace: %s", namespaceKP)
+	logrus.Infof("\t\tNamespace: %s", namespaceKP)
 	logrus.Infof("\t\t%s", kyPods)
 
 	// Detect Kube-proxy mode
@@ -127,75 +127,37 @@ func main() {
 	logrus.Infof("\n")
 	logrus.Infof("Detected kube-proxy mode: %s", kpMode)
 
-	// TODO: use flags
-	// START: kube-proxy variables
+	// Setting ContainerName and Namespace
 	KPTestContainerName := kyPods[0]
 	KPTestNamespaceName := c.Namespace
-
 	randStr, err := k8devel.GenerateRandomString(6, "lower")
 	if err != nil {
 		logrus.Fatal(err)
 	}
+
+        // TODO: Just load the iptables commands if kube-proxy
+        // is IPTABLES or return error
+        // Loading some iptables
+        iptablesCmd := k8devel.IPTablesLoadPreDefinedCommands()
+        if err != nil {
+                logrus.Fatal(err)
+        }
+
+        // iptables saving initial state
+        iptablesInitialState, err := k8devel.IPTablesSaveNatTable(
+                                &c,
+                                &iptablesCmd,
+                                KPTestContainerName,
+                                "kube-system")
+        if err != nil {
+                logrus.Fatal(err)
+        }
+
+
+	// Setting Service Name
 	KPTestServiceName := KPTestNamespaceName +
 			"service" +
 			randStr
-
-	KPTestNginxDeploymentName := KPTestNamespaceName +
-			"nginxdeployment" +
-			randStr
-	// END: kube-proxy variables
-
-	// TODO: Just load the iptables commands if kube-proxy
-	// is IPTABLES or return error
-	// Loading some iptables
-	iptablesCmd := k8devel.IPTablesLoadPreDefinedCommands()
-	if err != nil {
-		logrus.Fatal(err)
-	}
-
-	// iptables saving initial state
-	iptablesInitialState, err := k8devel.IPTablesSaveNatTable(
-				&c,
-				&iptablesCmd,
-				KPTestContainerName,
-				"kube-system")
-        if err != nil {
-		logrus.Fatal(err)
-        }
-
-	// START: Namespace
-	_, err = k8devel.ExistsNamespace(&c,
-			KPTestNamespaceName)
-	if err != nil {
-		err = k8devel.CreateNamespace(&c,
-			KPTestNamespaceName)
-		if err != nil {
-			logrus.Fatal("exiting... failed to create: ", err)
-		}
-	}
-	// END: Namespace
-
-	// START: Deployment
-	d := k8devel.Deployment {
-		Name: KPTestNginxDeploymentName,
-		Namespace: KPTestNamespaceName,
-		Replicas: 1,
-		LabelKey: "app",
-		LabelValue: "kptesting",
-	}
-
-	d.Pod.Name = "nginx"
-	d.Pod.Image = "nginx:1.14.2"
-	d.Pod.ContainerPortName = "http"
-	d.Pod.ContainerPortProtocol = "TCP"
-	d.Pod.ContainerPort = 80
-
-	logrus.Infof("\n")
-	err = k8devel.CreateDeployment(&c, &d)
-	if err != nil {
-		logrus.Fatal("exiting... failed to create: ", err)
-	}
-	// END: Deployment
 
 	// START: Service
 	// nodePort - a static port assigned on each the node
@@ -227,12 +189,10 @@ func main() {
 	}
 	// END: Service
 
+
 	// START: iptables diff
 	iptablesStateAfterEndpointCreated, err := k8devel.IPTablesSaveNatTable(
-				&c,
-				&iptablesCmd,
-				KPTestContainerName,
-				"kube-system")
+				&c, &iptablesCmd, KPTestContainerName, "kube-system")
         if err != nil {
 		logrus.Fatal(err)
         }
