@@ -176,9 +176,9 @@ func main() {
 		SelectorValue: "kptesting",
 		PortName: "http",
 		PortProtocol: "TCP",
-		Port: 80,
-		TargetPort: 80,
-		NodePort: 30001,
+		Port: 80,              // service
+		TargetPort: 80,        // container
+		NodePort: 30001,       // node
 	}
 	err = k8devel.CreateNodePortService(&c, &s)
 	if err != nil {
@@ -215,23 +215,12 @@ func main() {
 	// END: iptables diff
 
 	// START: Pod
-	// PodCommandInitBash struct for running bash command
-	PodCommandInitBash := []string {
-		"/bin/bash",
-	}
-
-	SleepOneDay := []string {
-		"-c",
-		"sleep 5000",
-	}
 
 	// Creating a POD Behind the service
 	p := k8devel.Pod {
 		Name: "kpnginxbehindservice",
 		Namespace: KPTestNamespaceName,
 		Image: "nginx:1.14.2",
-		Command: PodCommandInitBash,
-		CommandArgs: SleepOneDay,
 		LabelKey: "app",
 		LabelValue: "kptesting",
 	}
@@ -249,8 +238,6 @@ func main() {
 		Name: containerName,
 		Namespace: KPTestNamespaceName,
 		Image: "nginx",
-		Command: PodCommandInitBash,
-		CommandArgs: SleepOneDay,
 		LabelKey: "app",
 		LabelValue: "foobar",
 	}
