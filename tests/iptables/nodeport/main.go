@@ -86,8 +86,8 @@ func main() {
 	// Initial set
         c := k8devel.Client{}
 	c.Namespace = "kptesting"
-	c.NumberMaxOfAttemptsPerTask = 10
-        c.TimeoutTaksInSec = 2
+	c.NumberMaxOfAttemptsPerTask = 15
+	c.TimeoutTaksInSec = 1
 
 	// Connect to cluster from:
 	//	- $HOME/kubeconfig (Linux)
@@ -257,4 +257,7 @@ func main() {
 	logrus.Infof("%s", ret)
 	color.Green.Println("[Test #2 PASSED]")
 	// END: Execute curl from the pod created to the new service
+
+	// TODO use cleanup function
+	k8devel.DeleteNamespace(&c, KPTestNamespaceName)
 }
