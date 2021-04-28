@@ -81,14 +81,6 @@ func main() {
 	logrus.Infof("| Pod 1                 |   | Pod 2                |")
 	logrus.Infof("| Node 1                |   | Node 2               |")
 	logrus.Infof("+-----------------------+   +----------------------+")
-
-
-
-
-
-
-
-
 	logrus.Infof("\n")
 
 	// Initial set
