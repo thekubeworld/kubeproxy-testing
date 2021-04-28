@@ -48,7 +48,7 @@ func main() {
         logrus.Infof(" |   |  NODE 1         |        NODE 2      |  | ")
 	logrus.Infof(" | +------------+      |     +------------+ |  | ")
 	logrus.Infof(" | | TargetPort |      |     | TargetPort |--+ | ")
-	logrus.Infof(" | |  port 3000 |      |     |  port 3000 |    | ")
+	logrus.Infof(" | |   30001    |      |     |   30001    |    | ")
 	logrus.Infof(" | +------------+      |     +------------+    | ")
 	logrus.Infof(" |            ^        |            ^          | ")
 	logrus.Infof(" |            |---------------------|          | ")
