@@ -185,10 +185,7 @@ func main() {
 		logrus.Fatal("exiting... failed to create: ", err)
 	}
 
-	IPService, err := k8devel.GetIPFromService(
-		&c,
-		KPTestServiceName,
-		KPTestNamespaceName)
+	IPNodes, err := k8devel.GetIPFromNodes(&c)
 	if err != nil {
 		logrus.Fatal("exiting... failed to create: ", err)
 	}
@@ -253,7 +250,7 @@ func main() {
 			&c,
 			containerName,
 			KPTestNamespaceName,
-			IPService + ":" + fmt.Sprint(s.NodePort))
+			IPNodes[0] + ":" + fmt.Sprint(s.NodePort))
         if err != nil {
 		logrus.Fatal(err)
         }
