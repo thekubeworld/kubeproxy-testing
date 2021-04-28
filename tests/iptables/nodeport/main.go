@@ -174,10 +174,11 @@ func main() {
 		LabelValue: "kptesting",
 		SelectorKey: "app",
 		SelectorValue: "kptesting",
-		Port: 80,
 		PortName: "http",
 		PortProtocol: "TCP",
-		TargetPort: 30001,
+		Port: 80,
+		TargetPort: 80,
+		NodePort: 30001
 	}
 	err = k8devel.CreateNodePortService(&c, &s)
 	if err != nil {
@@ -250,8 +251,8 @@ func main() {
 		Image: "nginx",
 		Command: PodCommandInitBash,
 		CommandArgs: SleepOneDay,
-		LabelKey: "",
-		LabelValue: "",
+		LabelKey: "app",
+		LabelValue: "foobar",
 	}
 	logrus.Infof("\n")
 	err = k8devel.CreatePod(&c, &p)
