@@ -229,7 +229,7 @@ func main() {
 	p := k8devel.Pod {
 		Name: "kpnginxbehindservice",
 		Namespace: KPTestNamespaceName,
-		Image: "nginx",
+		Image: "nginx:1.14.2",
 		Command: PodCommandInitBash,
 		CommandArgs: SleepOneDay,
 		LabelKey: "app",
@@ -266,7 +266,7 @@ func main() {
 			&c,
 			containerName,
 			KPTestNamespaceName,
-			IPService + ":" + strconv.Itoa(s.TargetPort))
+			IPService + ":" + strconv.Itoa(s.NodePort))
         if err != nil {
 		logrus.Fatal(err)
         }
