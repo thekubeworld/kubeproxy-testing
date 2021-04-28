@@ -235,13 +235,16 @@ func main() {
 		LabelValue: "kptesting",
 	}
 	logrus.Infof("\n")
-	k8devel.CreatePod(&c, &p)
+	err = k8devel.CreatePod(&c, &p)
+        if err != nil {
+		logrus.Fatal(err)
+        }
 	// END: Pod
 
 	// Creating a POD outside the service (No labels)
 	// So it will try to connect to pod behind the service
 	containerName := "nginxtoconnecttoservice"
-	x := k8devel.Pod {
+	p = k8devel.Pod {
 		Name: containerName,
 		Namespace: KPTestNamespaceName,
 		Image: "nginx",
@@ -251,7 +254,10 @@ func main() {
 		LabelValue: "",
 	}
 	logrus.Infof("\n")
-	k8devel.CreatePod(&c, &x)
+	err = k8devel.CreatePod(&c, &p)
+        if err != nil {
+		logrus.Fatal(err)
+        }
 	// END: Pod
 
 	// START: Execute curl from the pod created to the new service
