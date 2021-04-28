@@ -178,7 +178,7 @@ func main() {
 		PortProtocol: "TCP",
 		Port: 80,
 		TargetPort: 80,
-		NodePort: 30001
+		NodePort: 30001,
 	}
 	err = k8devel.CreateNodePortService(&c, &s)
 	if err != nil {
