@@ -189,6 +189,7 @@ func main() {
 		logrus.Fatal(err)
         }
 
+	// Make a diff between two states we collected from iptables
 	out, err := k8devel.DiffCommand(iptablesInitialState.Name(),
 			iptablesStateAfterEndpointCreated.Name())
         if err != nil {
