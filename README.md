@@ -10,7 +10,7 @@ $ go get github.com/thekubeworld/k8devel
 ```
 $ git clone https://github.com/thekubeworld/kubeproxy-testing
 $ cd kubeproxy-testing
-$ go run tests/clusterip/main.go 
+$ go run tests/iptables/clusterip/main.go 
 ```
 
 ```
