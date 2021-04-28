@@ -145,6 +145,18 @@ func main() {
                 logrus.Fatal(err)
         }
 
+	// START: Namespace
+        _, err = k8devel.ExistsNamespace(&c,
+                        KPTestNamespaceName)
+        if err != nil {
+                err = k8devel.CreateNamespace(&c,
+                        KPTestNamespaceName)
+                if err != nil {
+                        logrus.Fatal("exiting... failed to create: ", err)
+                }
+        }
+        // END: Namespace
+
 
 	// Setting Service Name
 	KPTestServiceName := KPTestNamespaceName +
@@ -212,17 +224,34 @@ func main() {
 		"sleep 5000",
 	}
 
-	containerName := "kptestingnginx"
+	// Creating a POD Behind the service
 	p := k8devel.Pod {
+		Name: "kpnginxbehindservice",
+		Namespace: KPTestNamespaceName,
+		Image: "nginx",
+		Command: PodCommandInitBash,
+		CommandArgs: SleepOneDay,
+		LabelKey: "app",
+		LabelValue: "kptesting",
+	}
+	logrus.Infof("\n")
+	k8devel.CreatePod(&c, &p)
+	// END: Pod
+
+	// Creating a POD outside the service (No labels)
+	// So it will try to connect to pod behind the service
+	containerName := "nginxtoconnecttoservice"
+	x := k8devel.Pod {
 		Name: containerName,
 		Namespace: KPTestNamespaceName,
 		Image: "nginx",
 		Command: PodCommandInitBash,
 		CommandArgs: SleepOneDay,
+		LabelKey: "",
+		LabelValue: "",
 	}
-
 	logrus.Infof("\n")
-	k8devel.CreatePod(&c, &p)
+	k8devel.CreatePod(&c, &x)
 	// END: Pod
 
 	// START: Execute curl from the pod created to the new service
