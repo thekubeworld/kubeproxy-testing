@@ -17,7 +17,7 @@ limitations under the License.
 package main
 
 import (
-	"strconv"
+	"fmt"
 	"github.com/thekubeworld/k8devel"
 	"github.com/sirupsen/logrus"
 	"github.com/gookit/color"
@@ -266,7 +266,7 @@ func main() {
 			&c,
 			containerName,
 			KPTestNamespaceName,
-			IPService + ":" + strconv.Itoa(s.NodePort))
+			IPService + ":" + fmt.Sprint(s.NodePort))
         if err != nil {
 		logrus.Fatal(err)
         }
