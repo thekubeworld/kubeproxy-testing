@@ -86,8 +86,7 @@ func main() {
 	// Initial set
         c := k8devel.Client{}
 	c.Namespace = "kptesting"
-	c.NumberMaxOfAttemptsPerTask = 15
-	c.TimeoutTaksInSec = 1
+	c.TimeoutTaksInSec = 20
 
 	// Connect to cluster from:
 	//	- $HOME/kubeconfig (Linux)
@@ -227,6 +226,7 @@ func main() {
 		logrus.Fatal(err)
         }
 	// END: Pod
+	logrus.Info("\n")
 
 	// Creating a POD outside the service (No labels)
 	// So it will try to connect to pod behind the service
@@ -238,7 +238,6 @@ func main() {
 		LabelKey: "app",
 		LabelValue: "foobar",
 	}
-	logrus.Infof("\n")
 	err = k8devel.CreatePod(&c, &p)
         if err != nil {
 		logrus.Fatal(err)
