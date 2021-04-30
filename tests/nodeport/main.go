@@ -29,7 +29,7 @@ func main() {
 
 	logrus.Infof("\n")
 	logrus.Infof("Test #2) Traffic will reach kube-proxy that will    ")
-	logrus.Infof("route using iptables to the right node that has the ")
+	logrus.Infof("route using iptables/ipvs/etc to the right node that has the ")
 	logrus.Infof("backend pod                                         ")
 	logrus.Infof("\n                                                  ")
 	logrus.Infof("               +---------------------+              ")
