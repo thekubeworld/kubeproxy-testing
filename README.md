@@ -3,8 +3,10 @@ A repo for testing kube-proxy and related bits
 
 [![iptables clusterip - CNI: kindnetd](https://github.com/thekubeworld/kubeproxy-testing/actions/workflows/iptables_kubeproxy_clusterip.yml/badge.svg)](https://github.com/thekubeworld/kubeproxy-testing/actions/workflows/iptables_kubeproxy_clusterip.yml)
 [![ipvs clusterip - CNI: kindnetd](https://github.com/thekubeworld/kubeproxy-testing/actions/workflows/ipvs_kubeproxy_clusterip.yml/badge.svg)](https://github.com/thekubeworld/kubeproxy-testing/actions/workflows/ipvs_kubeproxy_clusterip.yml)
+
 [![iptables nodeport - CNI: kindnetd](https://github.com/thekubeworld/kubeproxy-testing/actions/workflows/iptables_kubeproxy_nodeport.yml/badge.svg)](https://github.com/thekubeworld/kubeproxy-testing/actions/workflows/iptables_kubeproxy_nodeport.yml)
 [![ipvs nodeport - CNI: kindnetd](https://github.com/thekubeworld/kubeproxy-testing/actions/workflows/ipvs_kubeproxy_nodeport.yml/badge.svg)](https://github.com/thekubeworld/kubeproxy-testing/actions/workflows/ipvs_kubeproxy_nodeport.yml)
+
 [![iptables loadbalancer - CNI: kindnetd](https://github.com/thekubeworld/kubeproxy-testing/actions/workflows/iptables_kubeproxy_loadbalancer.yml/badge.svg)](https://github.com/thekubeworld/kubeproxy-testing/actions/workflows/iptables_kubeproxy_loadbalancer.yml)
 [![ipvs loadbalancer - CNI: kindnetd](https://github.com/thekubeworld/kubeproxy-testing/actions/workflows/ipvs_kubeproxy_loadbalancer.yml/badge.svg)](https://github.com/thekubeworld/kubeproxy-testing/actions/workflows/ipvs_kubeproxy_loadbalancer.yml)
 
