@@ -1,4 +1,4 @@
-name: "iptables nodeport - CNI: kindnetd"
+name: "ipvs nodeport - CNI: kindnetd"
 on:
   workflow_dispatch:
   schedule:
@@ -6,7 +6,7 @@ on:
     - cron: '00 15 * * *'
 
 jobs:
-  iptables-kube-proxy-nodeport-test-job:
+  ipvs-kube-proxy-nodeport-test-job:
     runs-on: [ ubuntu-18.04 ]
     steps:
       - uses: actions/checkout@v2
