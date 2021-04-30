@@ -205,8 +205,11 @@ func main() {
 		logrus.Fatal(err)
         }
 
-	if len(string(out)) > 0 {
-		logrus.Infof("%s", string(out))
+	if kpMode == "iptables" {
+
+		if len(string(out)) > 0 {
+			logrus.Infof("%s", string(out))
+		}
 	}
 	// END: iptables diff
 
