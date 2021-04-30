@@ -204,22 +204,11 @@ func main() {
 
 	// START: Pod
 	// PodCommandInitBash struct for running bash command
-	PodCommandInitBash := []string {
-		"/bin/bash",
-	}
-
-	SleepOneDay := []string {
-		"-c",
-		"sleep 5000",
-	}
-
 	containerName := "kptestingnginx"
 	p := k8devel.Pod {
 		Name: containerName,
 		Namespace: KPTestNamespaceName,
 		Image: "nginx",
-		Command: PodCommandInitBash,
-		CommandArgs: SleepOneDay,
 		LabelKey: "app",
                 LabelValue: "kptesting",
 	}
