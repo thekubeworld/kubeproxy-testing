@@ -6,7 +6,7 @@ on:
     - cron: '00 15 * * *'
 
 jobs:
-  kube-proxy-iptables-test-job:
+  iptables-loadbalancer-cni-kindnetd:
     runs-on: [ ubuntu-18.04 ]
     steps:
       - uses: actions/checkout@v2
@@ -34,7 +34,7 @@ jobs:
             go get github.com/gookit/color
             go get github.com/sirupsen/logrus
             pushd ./tests/loadbalancer/
-               go run main.go
+               go run main.go &> ../../downloads/output_kubeproxy_iptables_loadbalancer.log
             popd
           popd
       - uses: actions/upload-artifact@v2
