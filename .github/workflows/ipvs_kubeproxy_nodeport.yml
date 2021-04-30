@@ -1,0 +1,42 @@
+name: "iptables nodeport - CNI: kindnetd"
+on:
+  workflow_dispatch:
+  schedule:
+    # Daily, 3:00pm
+    - cron: '00 15 * * *'
+
+jobs:
+  iptables-kube-proxy-nodeport-test-job:
+    runs-on: [ ubuntu-18.04 ]
+    steps:
+      - uses: actions/checkout@v2
+        with:
+           path: main
+
+          # Setup Go
+      - name: Setup Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: '1.15.0' # The Go version to download (if necessary) and use.
+    
+      - uses: actions/checkout@master
+        with:
+          repository: K8sbykeshed/k8s-local-dev
+          path: k8s-local-dev
+
+      - run: |
+          pushd ./k8s-local-dev
+            ./k8s-local-dev kindnetd --kube-proxy-mode ipvs
+          popd
+          pushd ./main
+            mkdir -p downloads
+            go get github.com/thekubeworld/k8devel
+            go get github.com/gookit/color
+            go get github.com/sirupsen/logrus
+            go run ./tests/nodeport/main.go
+          popd
+      - uses: actions/upload-artifact@v2
+        with:
+          name: logs
+          path: ./main/downloads/
+          retention-days: 60
