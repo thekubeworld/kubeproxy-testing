@@ -104,9 +104,6 @@ func main() {
 			randStr
 	// END: kube-proxy variables
 
-	// TODO: Just load the iptables commands if kube-proxy
-	// is IPTABLES or return error
-	// Loading some iptables
 	iptablesCmd := k8devel.IPTablesLoadPreDefinedCommands()
 	if err != nil {
 		logrus.Fatal(err)
@@ -118,9 +115,9 @@ func main() {
 				&iptablesCmd,
 				KPTestContainerName,
 				"kube-system")
-        if err != nil {
+	if err != nil {
 		logrus.Fatal(err)
-        }
+	}
 
 	// START: Namespace
 	_, err = k8devel.ExistsNamespace(&c,
@@ -181,7 +178,6 @@ func main() {
 	}
 	// END: Service
 
-	// START: iptables diff
 	iptablesStateAfterEndpointCreated, err := k8devel.IPTablesSaveNatTable(
 				&c,
 				&iptablesCmd,
@@ -189,18 +185,20 @@ func main() {
 				"kube-system")
         if err != nil {
 		logrus.Fatal(err)
-        }
+	}
 
 	out, err := k8devel.DiffCommand(iptablesInitialState.Name(),
 			iptablesStateAfterEndpointCreated.Name())
-        if err != nil {
+	if err != nil {
 		logrus.Fatal(err)
-        }
-
-	if len(string(out)) > 0 {
-		logrus.Infof("%s", string(out))
 	}
-	// END: iptables diff
+
+	if kpMode == "iptables" {
+		if len(string(out)) > 0 {
+			logrus.Infof("%s", string(out))
+		}
+	}
+		// END: iptables diff
 
 	// START: Pod
 	// PodCommandInitBash struct for running bash command
