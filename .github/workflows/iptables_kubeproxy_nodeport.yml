@@ -1,4 +1,4 @@
-name: "iptables nodeport"
+name: "iptables nodeport - CNI: kindnetd"
 on:
   workflow_dispatch:
   schedule:
