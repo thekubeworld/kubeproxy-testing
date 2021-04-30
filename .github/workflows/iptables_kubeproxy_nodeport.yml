@@ -1,4 +1,4 @@
-name: "iptables kube-proxy nodeport test job"
+name: "iptables nodeport"
 on:
   workflow_dispatch:
   schedule:
