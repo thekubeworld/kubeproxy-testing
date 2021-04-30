@@ -12,6 +12,12 @@ A repo for testing kube-proxy and related bits
 [![iptables loadbalancer - CNI: kindnetd](https://github.com/thekubeworld/kubeproxy-testing/actions/workflows/iptables_kubeproxy_loadbalancer.yml/badge.svg)](https://github.com/thekubeworld/kubeproxy-testing/actions/workflows/iptables_kubeproxy_loadbalancer.yml)
 [![ipvs loadbalancer - CNI: kindnetd](https://github.com/thekubeworld/kubeproxy-testing/actions/workflows/ipvs_kubeproxy_loadbalancer.yml/badge.svg)](https://github.com/thekubeworld/kubeproxy-testing/actions/workflows/ipvs_kubeproxy_loadbalancer.yml)
 
+To see the logs/output from each job, follow these steps:
+
+- Select the artifact from the list above.
+- Click on the workflow/job
+- Go to Artifacts and download logs.zip. It will contain the output logs from the job.
+
 **Looking to run the tests locally**?  
 
 **1)** Download the [k8devel Go library for Kubernetes](https://github.com/thekubeworld/k8devel)
