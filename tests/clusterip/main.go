@@ -110,7 +110,7 @@ func main() {
 	}
 
 	// iptables saving initial state
-	iptablesInitialState, err := k8devel.IPTablesSaveNatTable(
+	iptablesInitialState, err := k8devel.IPTablesSave(
 				&c,
 				&iptablesCmd,
 				KPTestContainerName,
@@ -178,7 +178,7 @@ func main() {
 	}
 	// END: Service
 
-	iptablesStateAfterEndpointCreated, err := k8devel.IPTablesSaveNatTable(
+	iptablesStateAfterEndpointCreated, err := k8devel.IPTablesSave(
 				&c,
 				&iptablesCmd,
 				KPTestContainerName,
