@@ -17,7 +17,7 @@ limitations under the License.
 package main
 
 import (
-	"fmt"
+	"os/exec"
 	"github.com/thekubeworld/k8devel"
 	"github.com/sirupsen/logrus"
 	"github.com/gookit/color"
@@ -25,63 +25,58 @@ import (
 
 func main() {
 	k8devel.SetLogrusLogging()
+
+	args := []string{"apply", "-f", "https://raw.githubusercontent.com/metallb/metallb/v0.9.6/manifests/namespace.yaml"}
+	cmd := exec.Command("kubectl", args...)
+	out, err := cmd.Output()
+	if err != nil {
+		logrus.Infof("%s", err)
+	}
+
+	args = []string{"apply", "-f", "https://raw.githubusercontent.com/metallb/metallb/v0.9.6/manifests/metallb.yaml"}
+	cmd = exec.Command("kubectl", args...)
+	out, err = cmd.Output()
+	if err != nil {
+		logrus.Infof("%s", err)
+	}
+
+	args = []string{"create", "secret", "generic", "-n", "metallb-system", "memberlist", "--from-literal=secretkey=\"$(openssl rand -base64 128)\""}
+	cmd = exec.Command("kubectl", args...)
+	out, err = cmd.Output()
+	if err != nil {
+		logrus.Infof("%s", err)
+	}
+
 	logrus.Infof("kube-proxy tests has started...")
 
 	logrus.Infof("\n")
-	logrus.Infof("Test #2) Traffic will reach kube-proxy that will    ")
-	logrus.Infof("route using iptables to the right node that has the ")
-	logrus.Infof("backend pod                                         ")
-	logrus.Infof("\n                                                  ")
-	logrus.Infof("               +---------------------+              ")
-	logrus.Infof("               |      TRAFFIC        |              ")
-	logrus.Infof("               |    FROM USERS       |              ")
-	logrus.Infof("               +---------------------+              ")
-	logrus.Infof("                          |                         ")
-	logrus.Infof("                          v                         ")
-	logrus.Infof("             +-- kube-proxy/iptables-+              ")
-	logrus.Infof("             |                       |              ")
-	logrus.Infof("             v                       v              ")
-	logrus.Infof("          Node IPs               Node IPs           ")
-	logrus.Infof("         and Ports               and ports          ")
-        logrus.Infof("+------------|-------+    +-----------|------------+")
-	logrus.Infof("| 10.10.50.54|:30001 |    |10.10.50.51|:30001      |")
-	logrus.Infof("+------------|--------    +-----------|------------+")
-	logrus.Infof("|		   +------------+-----------+            |")
-	logrus.Infof("|                         |                        |")
-	logrus.Infof("+-----------------------+-V-+----------------------|")
-	logrus.Infof("| ClusterIP 10.111.239.7|:80|                      |")
-	logrus.Infof("+-----------------------|-|-|----------------------|")
-	logrus.Infof("| Service 1             | | |                      |")
-	logrus.Infof("|   Selector:           | | |                      |")
-	logrus.Infof("|   app: nginx          | | |                      |")
-	logrus.Infof("+-----------------------|-|-|----------------------|")
-	logrus.Infof("|               +-------|-+-|-----------+          |")
-	logrus.Infof("|               |       |   |           |          |")
-	logrus.Infof("+---------------|-------|   |-----------|----------|")
-	logrus.Infof("| EndpointIP and| ports |   |EndpointIP | and ports|")
-	logrus.Infof("|               v       |   |           v          |")
-	logrus.Infof("|   10.244.2.2 :80 :8080|   |10.244.2.3 :80  :8080 |")
-	logrus.Infof("+---------------|---|---|   |-----------|----|-----|")
-	logrus.Infof("|               |   |   |   |           |    |     |")
-	logrus.Infof("+---------------|---|---|   |-----------|----|-----|")
-	logrus.Infof("| Container port|   |   |   | Container |Port|     |")
-	logrus.Infof("|               |   |   |   |           |    |     |")
-	logrus.Infof("|             :80 :8080 |   |          :80  :8080  |")
-	logrus.Infof("+---------------|---|---|---|-----------|----|     |")
-	logrus.Infof("|               |   |   |   |           |    |     |")
-	logrus.Infof("|               |   |   |   |           |    |     |")
-	logrus.Infof("|               |   |   |   |           |    |     |")
-	logrus.Infof("|               v   |   |   |           v    |     |")
-	logrus.Infof("|      Container 1  |   |   |  Container 1   |     |")
-	logrus.Infof("|                   |   |   |                |     |")
-	logrus.Infof("|                   v   |   |                v     |")
-	logrus.Infof("|         Container 2   |   |          Container 2 |")
-	logrus.Infof("|    Labels: app nginx  |   |    Labels: app nginx |")
-	logrus.Infof("|                       |   |                      |")
-	logrus.Infof("| Pod 1                 |   | Pod 2                |")
-	logrus.Infof("| Node 1                |   | Node 2               |")
-	logrus.Infof("+-----------------------+   +----------------------+")
-	logrus.Infof("\n")
+        logrus.Infof("\n")
+        logrus.Infof("Test #3) User's Traffic reach loadbalancer that will")
+        logrus.Infof("route using kubeproxy/iptables to the right service ")
+        logrus.Infof("that has the backend pod                            ")
+        logrus.Infof("\n                                                  ")
+        logrus.Infof("               +---------------------+              ")
+        logrus.Infof("               |      TRAFFIC        |              ")
+        logrus.Infof("               |    FROM USERS       |              ")
+        logrus.Infof("               +---------------------+              ")
+        logrus.Infof("                          |                         ")
+        logrus.Infof("                          v                         ")
+        logrus.Infof("             +-----------------------+              ")
+        logrus.Infof("             |    Load Balancer      |              ")
+        logrus.Infof("             +-----------------------+              ")
+        logrus.Infof("  +----------|-----------------------|-----------+  ")
+        logrus.Infof("  |          v                       v           |  ")
+        logrus.Infof("  |       +-------------------------------+      |  ")
+        logrus.Infof("  |       |            Service            |      |  ")
+        logrus.Infof("  |       +-------------------------------+      |  ")
+        logrus.Infof("  |           |            |           |         |  ")
+        logrus.Infof("  |           v            v           v         |  ")
+        logrus.Infof("  |      +-------+     +------+    +------+      |  ")
+        logrus.Infof("  |      |  POD  |     |  POD |    |  POD |      |  ")
+        logrus.Infof("  |      +-------+     +------+    +------+      |  ")
+        logrus.Infof("  |                                              |  ")
+        logrus.Infof("  | Kubernetes Cluster                           |  ")
+        logrus.Infof("  +----------------------------------------------+  ")
 
 	// Initial set
         c := k8devel.Client{}
@@ -167,27 +162,21 @@ func main() {
         // port - port exposed internally in the cluster
         // targetPort - the container port to send requests to
 	s := k8devel.Service {
-		Name: KPTestServiceName,
-		Namespace: KPTestNamespaceName,
-		LabelKey: "app",
-		LabelValue: "kptesting",
-		SelectorKey: "app",
-		SelectorValue: "kptesting",
-		PortName: "http",
-		PortProtocol: "TCP",
-		Port: 80,              // service
-		TargetPort: 80,        // container
-		NodePort: 30001,       // node
+	        Name: KPTestServiceName,
+                Namespace: KPTestNamespaceName,
+                LabelKey: "app",
+                LabelValue: "kptesting",
+                SelectorKey: "app",
+                SelectorValue: "kptesting",
+                PortName: "http",
+                PortProtocol: "TCP",
+                Port: 80,
 	}
-	err = k8devel.CreateNodePortService(&c, &s)
+	err = k8devel.CreateLoadBalancerService(&c, &s)
 	if err != nil {
 		logrus.Fatal("exiting... failed to create: ", err)
 	}
 
-	IPNodes, err := k8devel.GetIPFromNodes(&c)
-	if err != nil {
-		logrus.Fatal("exiting... failed to create: ", err)
-	}
 	// END: Service
 
 
@@ -199,7 +188,7 @@ func main() {
         }
 
 	// Make a diff between two states we collected from iptables
-	out, err := k8devel.DiffCommand(iptablesInitialState.Name(),
+	out, err = k8devel.DiffCommand(iptablesInitialState.Name(),
 			iptablesStateAfterEndpointCreated.Name())
         if err != nil {
 		logrus.Fatal(err)
@@ -209,6 +198,24 @@ func main() {
 		logrus.Infof("%s", string(out))
 	}
 	// END: iptables diff
+
+	// TODO: use library
+	args = []string{"apply", "-f", "metallbcfg.yaml"}
+	cmd = exec.Command("kubectl", args...)
+	out, err = cmd.Output()
+	if err != nil {
+		logrus.Infof("%s", err)
+	}
+
+	/*
+	ExternalIPService, err := k8devel.GetExternalIPFromService(
+                &c,
+                KPTestServiceName,
+                KPTestNamespaceName)
+        if err != nil {
+                logrus.Fatal("exiting... failed to create: ", err)
+        }*/
+
 
 	// START: Pod
 
@@ -243,13 +250,12 @@ func main() {
 		logrus.Fatal(err)
         }
 	// END: Pod
-
 	// START: Execute curl from the pod created to the new service
 	ret, err := k8devel.ExecuteHTTPReqInsideContainer(
 			&c,
 			containerName,
 			KPTestNamespaceName,
-			IPNodes[0] + ":" + fmt.Sprint(s.NodePort))
+			"172.17.255.1")
         if err != nil {
 		logrus.Fatal(err)
         }
