@@ -1,4 +1,4 @@
-name: "kube-proxy iptables test job"
+name: "iptables kube-proxy clusterip test job"
 on:
   workflow_dispatch:
   schedule:
