@@ -1,4 +1,4 @@
-name: "iptables loadbalancer - CNI: kindnetd"
+name: "iptables kubeproxy loadbalancer - CNI: kindnetd"
 on:
   workflow_dispatch:
   schedule:
@@ -6,7 +6,7 @@ on:
     - cron: '00 15 * * *'
 
 jobs:
-  iptables-loadbalancer-cni-kindnetd:
+  iptables-kubeproxy-loadbalancer-cni-kindnetd:
     runs-on: [ ubuntu-18.04 ]
     steps:
       - uses: actions/checkout@v2

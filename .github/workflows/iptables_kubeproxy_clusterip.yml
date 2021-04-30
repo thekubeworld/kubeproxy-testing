@@ -1,4 +1,4 @@
-name: "iptables clusterip - CNI: kindnetd"
+name: "iptables kubeproxy clusterip - CNI: kindnetd"
 on:
   workflow_dispatch:
   schedule:
@@ -6,7 +6,7 @@ on:
     - cron: '00 15 * * *'
 
 jobs:
-  iptables-clusterip-cni-kindnetd:
+  iptables-kubeproxy-clusterip-cni-kindnetd:
     runs-on: [ ubuntu-18.04 ]
     steps:
       - uses: actions/checkout@v2
