@@ -17,13 +17,13 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v2
         with:
-          go-version: '1.15.0' # The Go version to download (if necessary) and use.
+          go-version: '1.16.3' # The Go version to download (if necessary) and use.
   
       - name: Install dependencies
         run: |
             go get -u -v github.com/thekubeworld/k8devel
             go get -u -v github.com/gookit/color
-
+            ls -R "/home/runner/go"
       - uses: actions/checkout@master
         with:
           repository: thekubeworld/k8s-local-dev
