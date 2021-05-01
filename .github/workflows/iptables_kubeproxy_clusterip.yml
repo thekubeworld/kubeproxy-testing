@@ -28,8 +28,7 @@ jobs:
         with:
           repository: thekubeworld/k8s-local-dev
           path: k8s-local-dev
-
-      - run: |
+        run: |
           pushd ./k8s-local-dev
             ./k8s-local-dev kindnetd
             go get -u -v github.com/thekubeworld/k8devel
