@@ -26,8 +26,8 @@ jobs:
       - run: |
           pushd ./k8s-local-dev
             ./k8s-local-dev kindnetd
-            GO111MODULE=off go get -u -v github.com/thekubeworld/k8devel
-            GO111MODULE=off github.com/gookit/color
+            GO111MODULE=on go get -u -v github.com/thekubeworld/k8devel
+            GO111MODULE=on go get -u -v github.com/gookit/color
             ls -R /home/runner/go/src/github.com/thekubeworld/k8devel
           popd
           pushd ./main
