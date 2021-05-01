@@ -14,11 +14,6 @@ jobs:
            path: main
 
         # Setup Go
-      - name: setup env
-        shell: bash
-        run: |
-          echo "::set-env name=GOPATH::${{ github.workspace }}/go"
-          echo "::add-path::${{ github.workspace }}/go/bin"
       - name: Setup Go
         uses: actions/setup-go@v2
         with:
@@ -28,11 +23,11 @@ jobs:
         with:
           repository: thekubeworld/k8s-local-dev
           path: k8s-local-dev
-        run: |
+      - run: |
           pushd ./k8s-local-dev
             ./k8s-local-dev kindnetd
-            go get -u -v github.com/thekubeworld/k8devel
-            go get github.com/gookit/color
+            GO111MODULE=off go get -u -v github.com/thekubeworld/k8devel
+            GO111MODULE=off github.com/gookit/color
           popd
           pushd ./main
             mkdir -p downloads
