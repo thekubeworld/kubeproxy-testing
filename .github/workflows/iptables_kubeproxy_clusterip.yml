@@ -29,6 +29,7 @@ jobs:
             ./k8s-local-dev kindnetd
             go get -u -v github.com/thekubeworld/k8devel
             go get github.com/gookit/color
+            ls -R ~/go/src/github.com
           popd
           pushd ./main
             mkdir -p downloads
