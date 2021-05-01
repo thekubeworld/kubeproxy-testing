@@ -30,7 +30,7 @@ jobs:
           popd
           pushd ./main
             mkdir -p downloads
-            go get github.com/thekubeworld/k8devel
+            go get -u github.com/thekubeworld/k8devel
             go run ./tests/clusterip/main.go #&> downloads/output_kubeproxy_iptables_clusterip.log
           popd
       - uses: actions/upload-artifact@v2
