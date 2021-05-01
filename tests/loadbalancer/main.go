@@ -18,13 +18,22 @@ package main
 
 import (
 	"os/exec"
-	"github.com/thekubeworld/k8devel"
 	"github.com/sirupsen/logrus"
 	"github.com/gookit/color"
+
+        "github.com/thekubeworld/k8devel/pkg/service"
+        "github.com/thekubeworld/k8devel/pkg/client"
+        "github.com/thekubeworld/k8devel/pkg/kubeproxy"
+        "github.com/thekubeworld/k8devel/pkg/logschema"
+        "github.com/thekubeworld/k8devel/pkg/iptables"
+        "github.com/thekubeworld/k8devel/pkg/pod"
+        "github.com/thekubeworld/k8devel/pkg/curl"
+        "github.com/thekubeworld/k8devel/pkg/namespace"
+        "github.com/thekubeworld/k8devel/pkg/util"
 )
 
 func main() {
-	k8devel.SetLogrusLogging()
+	logschema.SetLogrusLogging()
 
 	args := []string{"apply", "-f", "https://raw.githubusercontent.com/metallb/metallb/v0.9.6/manifests/namespace.yaml"}
 	cmd := exec.Command("kubectl", args...)
@@ -79,8 +88,16 @@ func main() {
         logrus.Infof("  +----------------------------------------------+  ")
 
 	// Initial set
-        c := k8devel.Client{}
-	c.Namespace = "kptesting"
+	randStr, err := util.GenerateRandomString(6, "lower")
+        if err != nil {
+                logrus.Fatal(err)
+        }
+
+        namespaceName := "kptesting" + randStr
+        labelApp := "kptesting"
+
+        c := client.Client{}
+	c.Namespace = namespaceName
 	c.TimeoutTaksInSec = 20
 
 	// Connect to cluster from:
@@ -93,7 +110,7 @@ func main() {
 	// collect data.
 	KP := "kube-proxy"
 	namespaceKP := "kube-system"
-	kyPods, kyNumberPods := k8devel.FindPodsWithNameContains(&c,
+	kyPods, kyNumberPods := pod.FindPodsWithNameContains(&c,
 		KP,
 		namespaceKP)
 	if kyNumberPods < 0 {
@@ -104,7 +121,7 @@ func main() {
 	logrus.Infof("\t\t%s", kyPods)
 
 	// Detect Kube-proxy mode
-	kpMode, err := k8devel.DetectKubeProxyMode(&c,
+	kpMode, err := kubeproxy.DetectKubeProxyMode(&c,
 			KP,
 			namespaceKP)
 	if err != nil {
@@ -116,7 +133,7 @@ func main() {
 	// Setting ContainerName and Namespace
 	KPTestContainerName := kyPods[0]
 	KPTestNamespaceName := c.Namespace
-	randStr, err := k8devel.GenerateRandomString(6, "lower")
+	randStr, err = util.GenerateRandomString(6, "lower")
 	if err != nil {
 		logrus.Fatal(err)
 	}
@@ -124,13 +141,13 @@ func main() {
         // TODO: Just load the iptables commands if kube-proxy
         // is IPTABLES or return error
         // Loading some iptables
-        iptablesCmd := k8devel.IPTablesLoadPreDefinedCommands()
+        iptablesCmd := iptables.LoadPreDefinedCommands()
         if err != nil {
                 logrus.Fatal(err)
         }
 
         // iptables saving initial state
-        iptablesInitialState, err := k8devel.IPTablesSaveNatTable(
+        iptablesInitialState, err := iptables.Save(
                                 &c,
                                 &iptablesCmd,
                                 KPTestContainerName,
@@ -140,10 +157,10 @@ func main() {
         }
 
 	// START: Namespace
-        _, err = k8devel.ExistsNamespace(&c,
+        _, err = namespace.Exists(&c,
                         KPTestNamespaceName)
         if err != nil {
-                err = k8devel.CreateNamespace(&c,
+                err = namespace.Create(&c,
                         KPTestNamespaceName)
                 if err != nil {
                         logrus.Fatal("exiting... failed to create: ", err)
@@ -161,18 +178,18 @@ func main() {
 	// nodePort - a static port assigned on each the node
         // port - port exposed internally in the cluster
         // targetPort - the container port to send requests to
-	s := k8devel.Service {
+	s := service.Instance {
 	        Name: KPTestServiceName,
                 Namespace: KPTestNamespaceName,
                 LabelKey: "app",
-                LabelValue: "kptesting",
+                LabelValue: labelApp,
                 SelectorKey: "app",
-                SelectorValue: "kptesting",
+                SelectorValue: labelApp,
                 PortName: "http",
                 PortProtocol: "TCP",
                 Port: 80,
 	}
-	err = k8devel.CreateLoadBalancerService(&c, &s)
+	err = service.CreateLoadBalancer(&c, &s)
 	if err != nil {
 		logrus.Fatal("exiting... failed to create: ", err)
 	}
@@ -181,14 +198,14 @@ func main() {
 
 
 	// START: iptables diff
-	iptablesStateAfterEndpointCreated, err := k8devel.IPTablesSaveNatTable(
+	iptablesStateAfterEndpointCreated, err := iptables.Save(
 				&c, &iptablesCmd, KPTestContainerName, "kube-system")
         if err != nil {
 		logrus.Fatal(err)
         }
 
 	// Make a diff between two states we collected from iptables
-	out, err = k8devel.DiffCommand(iptablesInitialState.Name(),
+	out, err = util.DiffCommand(iptablesInitialState.Name(),
 			iptablesStateAfterEndpointCreated.Name())
         if err != nil {
 		logrus.Fatal(err)
@@ -220,15 +237,15 @@ func main() {
 	// START: Pod
 
 	// Creating a POD Behind the service
-	p := k8devel.Pod {
+	p := pod.Instance {
 		Name: "kpnginxbehindservice",
 		Namespace: KPTestNamespaceName,
 		Image: "nginx:1.14.2",
 		LabelKey: "app",
-		LabelValue: "kptesting",
+		LabelValue: labelApp,
 	}
 	logrus.Infof("\n")
-	err = k8devel.CreatePod(&c, &p)
+	err = pod.Create(&c, &p)
         if err != nil {
 		logrus.Fatal(err)
         }
@@ -238,20 +255,20 @@ func main() {
 	// Creating a POD outside the service (No labels)
 	// So it will try to connect to pod behind the service
 	containerName := "nginxtoconnecttoservice"
-	p = k8devel.Pod {
+	p = pod.Instance {
 		Name: containerName,
 		Namespace: KPTestNamespaceName,
 		Image: "nginx",
 		LabelKey: "app",
 		LabelValue: "foobar",
 	}
-	err = k8devel.CreatePod(&c, &p)
+	err = pod.Create(&c, &p)
         if err != nil {
 		logrus.Fatal(err)
         }
 	// END: Pod
 	// START: Execute curl from the pod created to the new service
-	ret, err := k8devel.ExecuteHTTPReqInsideContainer(
+	ret, err := curl.ExecuteHTTPReqInsideContainer(
 			&c,
 			containerName,
 			KPTestNamespaceName,
@@ -263,6 +280,5 @@ func main() {
 	color.Green.Println("[Test #2 PASSED]")
 	// END: Execute curl from the pod created to the new service
 
-	// TODO use cleanup function
-	k8devel.DeleteNamespace(&c, KPTestNamespaceName)
+	namespace.Delete(&c, namespaceName)
 }

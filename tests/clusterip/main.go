@@ -17,13 +17,22 @@ limitations under the License.
 package main
 
 import (
-	"github.com/thekubeworld/k8devel"
+	"github.com/thekubeworld/k8devel/pkg/deployment"
+	"github.com/thekubeworld/k8devel/pkg/service"
+	"github.com/thekubeworld/k8devel/pkg/client"
+	"github.com/thekubeworld/k8devel/pkg/kubeproxy"
+	"github.com/thekubeworld/k8devel/pkg/logschema"
+	"github.com/thekubeworld/k8devel/pkg/iptables"
+	"github.com/thekubeworld/k8devel/pkg/pod"
+	"github.com/thekubeworld/k8devel/pkg/curl"
+	"github.com/thekubeworld/k8devel/pkg/namespace"
+	"github.com/thekubeworld/k8devel/pkg/util"
 	"github.com/sirupsen/logrus"
 	"github.com/gookit/color"
 )
 
 func main() {
-	k8devel.SetLogrusLogging()
+	logschema.SetLogrusLogging()
 	logrus.Infof("kube-proxy tests has started...")
 
 	logrus.Infof("\n")
@@ -51,8 +60,16 @@ func main() {
 	logrus.Infof("\n")
 
 	// Initial set
-        c := k8devel.Client{}
-	c.Namespace = "kptesting"
+	randStr, err := util.GenerateRandomString(6, "lower")
+	if err != nil {
+		logrus.Fatal(err)
+	}
+
+	namespaceName := "kptesting" + randStr
+	labelApp := "kptesting"
+
+        c := client.Client{}
+	c.Namespace = namespaceName
 	c.NumberMaxOfAttemptsPerTask = 10
         c.TimeoutTaksInSec = 20
 
@@ -66,7 +83,7 @@ func main() {
 	// collect data.
 	KP := "kube-proxy"
 	namespaceKP := "kube-system"
-	kyPods, kyNumberPods := k8devel.FindPodsWithNameContains(&c,
+	kyPods, kyNumberPods := pod.FindPodsWithNameContains(&c,
 		KP,
 		namespaceKP)
 	if kyNumberPods < 0 {
@@ -77,7 +94,7 @@ func main() {
 	logrus.Infof("\t\t%s", kyPods)
 
 	// Detect Kube-proxy mode
-	kpMode, err := k8devel.DetectKubeProxyMode(&c,
+	kpMode, err := kubeproxy.DetectKubeProxyMode(&c,
 			KP,
 			namespaceKP)
 	if err != nil {
@@ -91,7 +108,7 @@ func main() {
 	KPTestContainerName := kyPods[0]
 	KPTestNamespaceName := c.Namespace
 
-	randStr, err := k8devel.GenerateRandomString(6, "lower")
+	randStr, err = util.GenerateRandomString(6, "lower")
 	if err != nil {
 		logrus.Fatal(err)
 	}
@@ -104,13 +121,13 @@ func main() {
 			randStr
 	// END: kube-proxy variables
 
-	iptablesCmd := k8devel.IPTablesLoadPreDefinedCommands()
+	iptablesCmd := iptables.LoadPreDefinedCommands()
 	if err != nil {
 		logrus.Fatal(err)
 	}
 
 	// iptables saving initial state
-	iptablesInitialState, err := k8devel.IPTablesSave(
+	iptablesInitialState, err := iptables.Save(
 				&c,
 				&iptablesCmd,
 				KPTestContainerName,
@@ -120,10 +137,10 @@ func main() {
 	}
 
 	// START: Namespace
-	_, err = k8devel.ExistsNamespace(&c,
+	_, err = namespace.Exists(&c,
 			KPTestNamespaceName)
 	if err != nil {
-		err = k8devel.CreateNamespace(&c,
+		err = namespace.Create(&c,
 			KPTestNamespaceName)
 		if err != nil {
 			logrus.Fatal("exiting... failed to create: ", err)
@@ -132,12 +149,12 @@ func main() {
 	// END: Namespace
 
 	// START: Deployment
-	d := k8devel.Deployment {
+	d := deployment.Instance {
 		Name: KPTestNginxDeploymentName,
 		Namespace: KPTestNamespaceName,
 		Replicas: 1,
 		LabelKey: "app",
-		LabelValue: "kptesting",
+		LabelValue: labelApp,
 	}
 
 	d.Pod.Name = "nginx"
@@ -147,29 +164,29 @@ func main() {
 	d.Pod.ContainerPort = 80
 
 	logrus.Infof("\n")
-	err = k8devel.CreateDeployment(&c, &d)
+	err = deployment.Create(&c, &d)
 	if err != nil {
 		logrus.Fatal("exiting... failed to create: ", err)
 	}
 	// END: Deployment
 
 	// START: Service
-	s := k8devel.Service {
+	s := service.Instance {
 		Name: KPTestServiceName,
 		Namespace: KPTestNamespaceName,
 		LabelKey: "app",
-		LabelValue: "kptesting",
+		LabelValue: labelApp,
 		SelectorKey: "app",
-		SelectorValue: "kptesting",
+		SelectorValue: labelApp,
 		ClusterIP: "",
 		Port: 80,
 	}
-	err = k8devel.CreateClusterIPService(&c, &s)
+	err = service.CreateClusterIP(&c, &s)
 	if err != nil {
 		logrus.Fatal("exiting... failed to create: ", err)
 	}
 
-	IPService, err := k8devel.GetIPFromService(
+	IPService, err := service.GetIP(
 		&c,
 		KPTestServiceName,
 		KPTestNamespaceName)
@@ -178,7 +195,7 @@ func main() {
 	}
 	// END: Service
 
-	iptablesStateAfterEndpointCreated, err := k8devel.IPTablesSave(
+	iptablesStateAfterEndpointCreated, err := iptables.Save(
 				&c,
 				&iptablesCmd,
 				KPTestContainerName,
@@ -187,7 +204,7 @@ func main() {
 		logrus.Fatal(err)
 	}
 
-	out, err := k8devel.DiffCommand(iptablesInitialState.Name(),
+	out, err := util.DiffCommand(iptablesInitialState.Name(),
 			iptablesStateAfterEndpointCreated.Name())
 	if err != nil {
 		logrus.Fatal(err)
@@ -203,20 +220,20 @@ func main() {
 	// START: Pod
 	// PodCommandInitBash struct for running bash command
 	containerName := "kptestingnginx"
-	p := k8devel.Pod {
+	p := pod.Instance {
 		Name: containerName,
 		Namespace: KPTestNamespaceName,
 		Image: "nginx",
 		LabelKey: "app",
-                LabelValue: "kptesting",
+                LabelValue: labelApp,
 	}
 
 	logrus.Infof("\n")
-	k8devel.CreatePod(&c, &p)
+	pod.Create(&c, &p)
 	// END: Pod
 
 	// START: Execute curl from the pod created to the new service
-	ret, err := k8devel.ExecuteHTTPReqInsideContainer(
+	ret, err := curl.ExecuteHTTPReqInsideContainer(
 			&c,
 			containerName,
 			KPTestNamespaceName,
@@ -227,4 +244,6 @@ func main() {
 	logrus.Infof("%s", ret)
 	color.Green.Println("[Test #1 PASSED]")
 	// END: Execute curl from the pod created to the new service
+
+	namespace.Delete(&c, namespaceName)
 }
