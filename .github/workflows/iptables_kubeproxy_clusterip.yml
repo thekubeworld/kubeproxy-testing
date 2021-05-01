@@ -17,7 +17,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v2
         with:
-          go-version: '1.16.3' # The Go version to download (if necessary) and use.
+          go-version: '1.15.0' # The Go version to download (if necessary) and use.
       - uses: actions/checkout@master
         with:
           repository: thekubeworld/k8s-local-dev
@@ -25,6 +25,9 @@ jobs:
       - run: |
           pushd ./k8s-local-dev
             ./k8s-local-dev kindnetd
+            go get github.com/thekubeworld/k8devel
+            go get github.com/gookit/color
+            go get github.com/sirupsen/logrus
           popd
           pushd ./main
             mkdir -p downloads
