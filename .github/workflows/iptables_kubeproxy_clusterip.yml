@@ -18,7 +18,13 @@ jobs:
         uses: actions/setup-go@v2
         with:
           go-version: '1.16.1' # The Go version to download (if necessary) and use.
-    
+   
+      - name: Install dependencies
+        run: |
+          go version
+          go get -u -v github.com/thekubeworld/k8devel
+          go get github.com/gookit/color
+
       - uses: actions/checkout@master
         with:
           repository: thekubeworld/k8s-local-dev
@@ -30,8 +36,6 @@ jobs:
           popd
           pushd ./main
             mkdir -p downloads
-            go get -u -v github.com/thekubeworld/k8devel
-            go get github.com/gookit/color
             go run ./tests/clusterip/main.go #&> downloads/output_kubeproxy_iptables_clusterip.log
           popd
       - uses: actions/upload-artifact@v2
