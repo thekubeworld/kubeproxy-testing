@@ -17,7 +17,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v2
         with:
-          go-version: '1.16.3' # The Go version to download (if necessary) and use.
+          go-version: '1.15.0' # The Go version to download (if necessary) and use.
     
       - uses: actions/checkout@master
         with:
@@ -30,9 +30,9 @@ jobs:
           popd
           pushd ./main
             mkdir -p downloads
-            go get github.com/thekubeworld/k8devel
-            go get github.com/gookit/color
-            go get github.com/sirupsen/logrus
+            go get -u github.com/thekubeworld/k8devel
+            go get -u github.com/gookit/color
+            go get -u github.com/sirupsen/logrus
             go run ./tests/clusterip/main.go &> downloads/output_kubeproxy_iptables_clusterip.log
           popd
       - uses: actions/upload-artifact@v2
