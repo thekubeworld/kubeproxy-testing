@@ -25,9 +25,10 @@ jobs:
       - run: |
           pushd ./k8s-local-dev
             ./k8s-local-dev kindnetd
-            GO111MODULE=on go get github.com/thekubeworld/k8devel
-            GO111MODULE=on go get github.com/gookit/color
-            GO111MODULE=on go get github.com/sirupsen/logrus
+            echo "GO111MODULE=on" >> $GITHUB_ENV
+            go get github.com/thekubeworld/k8devel/pkg/client 
+            go get github.com/gookit/color
+            go get github.com/sirupsen/logrus
           popd
           pushd ./main
             mkdir -p downloads
