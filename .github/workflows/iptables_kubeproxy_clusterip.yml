@@ -8,6 +8,9 @@ on:
 jobs:
   iptables-kubeproxy-clusterip-cni-kindnetd:
     runs-on: [ ubuntu-18.04 ]
+    env:
+      GOPATH: /home/runner/work/k8devel/go
+      GO111MODULE: auto
     steps:
       - uses: actions/checkout@v2
         with:
