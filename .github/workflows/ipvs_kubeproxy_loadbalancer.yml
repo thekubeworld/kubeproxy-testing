@@ -8,6 +8,8 @@ on:
 jobs:
   ipvs-kubeproxy-loadbalancer-cni-kindnetd:
     runs-on: [ ubuntu-18.04 ]
+    GOPATH: /home/runner/work/k8devel/go
+    GO111MODULE: auto
     steps:
       - uses: actions/checkout@v2
         with:
@@ -17,7 +19,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v2
         with:
-          go-version: '1.15.11' # The Go version to download (if necessary) and use.
+          go-version: '1.16.x'
     
       - uses: actions/checkout@master
         with:
