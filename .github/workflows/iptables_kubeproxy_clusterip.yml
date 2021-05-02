@@ -10,7 +10,7 @@ jobs:
     runs-on: [ ubuntu-18.04 ]
     env:
       GOPATH: /home/runner/work/k8devel/go
-    #GO111MODULE: auto
+      GO111MODULE: auto
     steps:
       - uses: actions/checkout@v2
         with:
@@ -31,8 +31,6 @@ jobs:
           popd
           pushd ./main
             mkdir -p downloads
-            # from the tests in the github actions setting env GO111MODULE=off
-            # or auto doesn't affect the system, need to set off for each command
             go get github.com/moby/spdystream
             go get github.com/thekubeworld/k8devel/pkg/client 
             go get github.com/gookit/color
