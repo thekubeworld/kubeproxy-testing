@@ -17,7 +17,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v2
         with:
-          go-version: '1.15.11' # The Go version to download (if necessary) and use.
+          go-version: '1.16.3'
       - uses: actions/checkout@master
         with:
           repository: thekubeworld/k8s-local-dev
@@ -28,11 +28,13 @@ jobs:
           popd
           pushd ./main
             mkdir -p downloads
-            go get github.com/moby/spdystream
-            go get github.com/thekubeworld/k8devel/pkg/client 
-            go get github.com/gookit/color
-            go get github.com/sirupsen/logrus
-            go run ./tests/clusterip/main.go &> downloads/output_kubeproxy_iptables_clusterip.log
+            # from the tests in the github actions setting env GO111MODULE=off
+            # or auto doesn't affect the system, need to set off for each command
+            GO111MODULE=off go get github.com/moby/spdystream
+            GO111MODULE=off go get github.com/thekubeworld/k8devel/pkg/client 
+            GO111MODULE=off go get github.com/gookit/color
+            GO111MODULE=off go get github.com/sirupsen/logrus
+            GO111MODULE=off go run ./tests/clusterip/main.go &> downloads/output_kubeproxy_iptables_clusterip.log
           popd
       - uses: actions/upload-artifact@v2
         with:
