@@ -27,6 +27,7 @@ import (
 	"github.com/thekubeworld/k8devel/pkg/curl"
 	"github.com/thekubeworld/k8devel/pkg/namespace"
 	"github.com/thekubeworld/k8devel/pkg/util"
+	"github.com/thekubeworld/k8devel/pkg/diagram"
 	"github.com/sirupsen/logrus"
 	"github.com/gookit/color"
 )
@@ -37,27 +38,7 @@ func main() {
 
 	logrus.Infof("\n")
 	logrus.Infof("Test #1) Pod connect via kube-proxy to a service and Pod")
-	logrus.Infof("\n")
-	logrus.Infof("           POD                  ")
-	logrus.Infof("            |                   ")
-	logrus.Infof("         Traffic                ")
-	logrus.Infof("            |                   ")
-	logrus.Infof("            |                   ")
-	logrus.Infof("   +-------------------+        ")
-	logrus.Infof("   |     kube-proxy    |        ")
-	logrus.Infof("   +-------------------+        ")
-	logrus.Infof("       |           |            ")
-	logrus.Infof("+------------------------------+")
-	logrus.Infof("|     Service (Cluster IP)     |")
-	logrus.Infof("|+-----------------------------+")
-	logrus.Infof("|       |           |          |")
-	logrus.Infof("|   +-------+   +-------+      |")
-	logrus.Infof("|   |  Pod  |   |  Pod  |      |")
-	logrus.Infof("|   +-------+   +-------+      |")
-	logrus.Infof("|                              |")
-	logrus.Infof("| kubernetes cluster           |")
-	logrus.Infof("+------------------------------+")
-	logrus.Infof("\n")
+	diagram.ClusterIP()
 
 	// Initial set
 	randStr, err := util.GenerateRandomString(6, "lower")

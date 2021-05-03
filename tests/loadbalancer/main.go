@@ -27,6 +27,7 @@ import (
         "github.com/thekubeworld/k8devel/pkg/logschema"
         "github.com/thekubeworld/k8devel/pkg/iptables"
         "github.com/thekubeworld/k8devel/pkg/pod"
+        "github.com/thekubeworld/k8devel/pkg/diagram"
         "github.com/thekubeworld/k8devel/pkg/curl"
         "github.com/thekubeworld/k8devel/pkg/namespace"
         "github.com/thekubeworld/k8devel/pkg/util"
@@ -63,29 +64,7 @@ func main() {
         logrus.Infof("Test #3) User's Traffic reach loadbalancer that will")
         logrus.Infof("route using kubeproxy/iptables to the right service ")
         logrus.Infof("that has the backend pod                            ")
-        logrus.Infof("\n                                                  ")
-        logrus.Infof("               +---------------------+              ")
-        logrus.Infof("               |      TRAFFIC        |              ")
-        logrus.Infof("               |    FROM USERS       |              ")
-        logrus.Infof("               +---------------------+              ")
-        logrus.Infof("                          |                         ")
-        logrus.Infof("                          v                         ")
-        logrus.Infof("             +-----------------------+              ")
-        logrus.Infof("             |    Load Balancer      |              ")
-        logrus.Infof("             +-----------------------+              ")
-        logrus.Infof("  +----------|-----------------------|-----------+  ")
-        logrus.Infof("  |          v                       v           |  ")
-        logrus.Infof("  |       +-------------------------------+      |  ")
-        logrus.Infof("  |       |            Service            |      |  ")
-        logrus.Infof("  |       +-------------------------------+      |  ")
-        logrus.Infof("  |           |            |           |         |  ")
-        logrus.Infof("  |           v            v           v         |  ")
-        logrus.Infof("  |      +-------+     +------+    +------+      |  ")
-        logrus.Infof("  |      |  POD  |     |  POD |    |  POD |      |  ")
-        logrus.Infof("  |      +-------+     +------+    +------+      |  ")
-        logrus.Infof("  |                                              |  ")
-        logrus.Infof("  | Kubernetes Cluster                           |  ")
-        logrus.Infof("  +----------------------------------------------+  ")
+	diagram.LoadBalancer()
 
 	// Initial set
 	randStr, err := util.GenerateRandomString(6, "lower")
