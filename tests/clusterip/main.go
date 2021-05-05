@@ -59,11 +59,6 @@ func main() {
 	//}
 
 	// START: kube-proxy variables
-	randStr, err = util.GenerateRandomString(6, "lower")
-	if err != nil {
-		fmt.Println(err)
-	}
-
 	Namespace := c.Namespace + randStr
 	NameService := "kproxysvc" + randStr
 	NameDeployment := "kproxydeploy" + randStr
