@@ -60,4 +60,14 @@ func main() {
 		fmt.Printf("%s\n", emoji.Show(e.CheckMarkButton))
 	}
 
+	fmt.Printf("%s ExternalName service ",
+		emoji.Show(e.HourGlassNotDone))
+	cmd = exec.Command("go", "run", "tests/externalname/main.go")
+	err = cmd.Run()
+	if err != nil {
+		fmt.Printf("%s \n\t%s\n", emoji.Show(e.CrossMark), err)
+	} else {
+		fmt.Printf("%s\n", emoji.Show(e.CheckMarkButton))
+	}
+
 }
