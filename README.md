@@ -12,6 +12,9 @@ A repo for testing kube-proxy and related bits
 [![iptables loadbalancer - CNI: kindnetd](https://github.com/thekubeworld/kubeproxy-testing/actions/workflows/iptables_kubeproxy_loadbalancer.yml/badge.svg)](https://github.com/thekubeworld/kubeproxy-testing/actions/workflows/iptables_kubeproxy_loadbalancer.yml)
 [![ipvs loadbalancer - CNI: kindnetd](https://github.com/thekubeworld/kubeproxy-testing/actions/workflows/ipvs_kubeproxy_loadbalancer.yml/badge.svg)](https://github.com/thekubeworld/kubeproxy-testing/actions/workflows/ipvs_kubeproxy_loadbalancer.yml)
 
+[![iptables kubeproxy externalname - CNI: kindnetd](https://github.com/thekubeworld/kubeproxy-testing/actions/workflows/iptables_kubeproxy_externalname.yml/badge.svg)](https://github.com/thekubeworld/kubeproxy-testing/actions/workflows/iptables_kubeproxy_externalname.yml)
+
+
 To see the logs/output from each job, follow these steps:
 
 - Select the artifact from the list above.
