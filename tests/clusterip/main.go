@@ -18,9 +18,13 @@ package main
 
 import (
 	"fmt"
+	"os"
+
 	"github.com/thekubeworld/k8devel/pkg/client"
 	"github.com/thekubeworld/k8devel/pkg/deployment"
+	"github.com/thekubeworld/k8devel/pkg/kubeproxy"
 	"github.com/thekubeworld/k8devel/pkg/service"
+
 	//"github.com/thekubeworld/k8devel/pkg/kubeproxy"
 	"github.com/thekubeworld/k8devel/pkg/curl"
 	"github.com/thekubeworld/k8devel/pkg/namespace"
@@ -49,14 +53,15 @@ func main() {
 	c.Connect()
 
 	// Saving current state of firewall in kube-proxy
-	//fwInitialState, err := kubeproxy.SaveCurrentFirewallState(
-	//	&c,
-	//	"kube-proxy",
-	//	"kube-proxy",
-	//	"kube-system")
-	//if err != nil {
-	//	fmt.Println(err)
-	//}
+	fwInitialState, err := kubeproxy.SaveCurrentFirewallState(
+		&c,
+		"kube-proxy",
+		"kube-proxy",
+		"kube-system")
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
 
 	// START: kube-proxy variables
 	Namespace := c.Namespace + randStr
@@ -66,9 +71,8 @@ func main() {
 	// START: Namespace
 	err = namespace.Create(&c, Namespace)
 	if err != nil {
-		fmt.Println(
-			"exiting... failed to create: ",
-			err)
+		fmt.Println("exiting... failed to create: ", err)
+		os.Exit(1)
 	}
 
 	// START: Deployment
@@ -89,6 +93,7 @@ func main() {
 	err = deployment.Create(&c, &d)
 	if err != nil {
 		fmt.Println("exiting... failed to create: ", err)
+		os.Exit(1)
 	}
 	// END: Deployment
 
@@ -106,7 +111,9 @@ func main() {
 	err = service.CreateClusterIP(&c, &s)
 	if err != nil {
 		fmt.Println("exiting... failed to create: ", err)
+		os.Exit(1)
 	}
+	fmt.Printf("Service ClusterIP name: %s\n", s.Name)
 
 	IPService, err := service.GetIP(
 		&c,
@@ -114,24 +121,28 @@ func main() {
 		Namespace)
 	if err != nil {
 		fmt.Println("exiting... failed to create: ", err)
+		os.Exit(1)
 	}
+	fmt.Println("IP of Service: ", IPService)
 
 	// Save firewall state after service, endpoint created
-	// fwAfterEndpointCreated, err := kubeproxy.SaveCurrentFirewallState(
-	//	&c,
-	//        "kube-proxy",
-	//       "kube-proxy",
-	//        "kube-system")
-	//if err != nil {
-	//	fmt.Println(err)
-	//}
+	fwAfterEndpointCreated, err := kubeproxy.SaveCurrentFirewallState(
+		&c,
+		"kube-proxy",
+		"kube-proxy",
+		"kube-system")
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
 
 	// See the difference with diff command
-	//out, err := util.DiffCommand(fwInitialState, fwAfterEndpointCreated)
-	//if err != nil {
-	//	fmt.Println(err)
-	//}
-	//fmt.Println("%s", string(out))
+	out, err := util.DiffCommand(fwInitialState, fwAfterEndpointCreated)
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+	fmt.Println("%s", string(out))
 
 	// START: Pod
 	// PodCommandInitBash struct for running bash command
@@ -143,17 +154,27 @@ func main() {
 		LabelKey:   "app",
 		LabelValue: labelApp,
 	}
-	pod.Create(&c, &p)
+	err = pod.Create(&c, &p)
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+	fmt.Printf("Pod created %s\n", p.Name)
 
 	// START: Execute curl from the pod created to the new service
-	_, err = curl.ExecuteHTTPReqInsideContainer(
+	ret, err := curl.ExecuteHTTPReqInsideContainer(
 		&c,
 		NameContainer,
 		Namespace,
 		"http://"+IPService)
 	if err != nil {
 		fmt.Println(err)
+		os.Exit(1)
 	}
+
+	fmt.Println(ret)
+
 	// Delete namespace
 	namespace.Delete(&c, Namespace)
+	fmt.Printf("Removed namespace %s\n", Namespace)
 }
