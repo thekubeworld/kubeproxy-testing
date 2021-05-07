@@ -17,20 +17,20 @@ limitations under the License.
 package main
 
 import (
-	"os/exec"
-	"github.com/sirupsen/logrus"
 	"github.com/gookit/color"
+	"github.com/sirupsen/logrus"
+	"os/exec"
 
-        "github.com/thekubeworld/k8devel/pkg/service"
-        "github.com/thekubeworld/k8devel/pkg/client"
-        "github.com/thekubeworld/k8devel/pkg/kubeproxy"
-        "github.com/thekubeworld/k8devel/pkg/logschema"
-        "github.com/thekubeworld/k8devel/pkg/iptables"
-        "github.com/thekubeworld/k8devel/pkg/pod"
-        "github.com/thekubeworld/k8devel/pkg/diagram"
-        "github.com/thekubeworld/k8devel/pkg/curl"
-        "github.com/thekubeworld/k8devel/pkg/namespace"
-        "github.com/thekubeworld/k8devel/pkg/util"
+	"github.com/thekubeworld/k8devel/pkg/client"
+	"github.com/thekubeworld/k8devel/pkg/curl"
+	"github.com/thekubeworld/k8devel/pkg/diagram"
+	"github.com/thekubeworld/k8devel/pkg/iptables"
+	"github.com/thekubeworld/k8devel/pkg/kubeproxy"
+	"github.com/thekubeworld/k8devel/pkg/logschema"
+	"github.com/thekubeworld/k8devel/pkg/namespace"
+	"github.com/thekubeworld/k8devel/pkg/pod"
+	"github.com/thekubeworld/k8devel/pkg/service"
+	"github.com/thekubeworld/k8devel/pkg/util"
 )
 
 func main() {
@@ -60,29 +60,29 @@ func main() {
 	logrus.Infof("kube-proxy tests has started...")
 
 	logrus.Infof("\n")
-        logrus.Infof("\n")
-        logrus.Infof("Test #3) User's Traffic reach loadbalancer that will")
-        logrus.Infof("route using kubeproxy/iptables to the right service ")
-        logrus.Infof("that has the backend pod                            ")
+	logrus.Infof("\n")
+	logrus.Infof("Test #3) User's Traffic reach loadbalancer that will")
+	logrus.Infof("route using kubeproxy/iptables to the right service ")
+	logrus.Infof("that has the backend pod                            ")
 	diagram.LoadBalancer()
 
 	// Initial set
 	randStr, err := util.GenerateRandomString(6, "lower")
-        if err != nil {
-                logrus.Fatal(err)
-        }
+	if err != nil {
+		logrus.Fatal(err)
+	}
 
-        namespaceName := "kptesting" + randStr
-        labelApp := "kptesting"
+	namespaceName := "kptesting" + randStr
+	labelApp := "kptesting"
 
-        c := client.Client{}
+	c := client.Client{}
 	c.Namespace = namespaceName
 	c.TimeoutTaksInSec = 20
 
 	// Connect to cluster from:
 	//	- $HOME/kubeconfig (Linux)
 	//	- os.Getenv("USERPROFILE") (Windows)
-        c.Connect()
+	c.Connect()
 
 	// kube-proxy is a DaemonSet, it will replicate the pod
 	// data to all nodes. Let's find one pod name to use and
@@ -101,8 +101,8 @@ func main() {
 
 	// Detect Kube-proxy mode
 	kpMode, err := kubeproxy.DetectKubeProxyMode(&c,
-			KP,
-			namespaceKP)
+		KP,
+		namespaceKP)
 	if err != nil {
 		logrus.Fatal(err)
 	}
@@ -117,56 +117,55 @@ func main() {
 		logrus.Fatal(err)
 	}
 
-        // TODO: Just load the iptables commands if kube-proxy
-        // is IPTABLES or return error
-        // Loading some iptables
-        iptablesCmd := iptables.LoadPreDefinedCommands()
-        if err != nil {
-                logrus.Fatal(err)
-        }
+	// TODO: Just load the iptables commands if kube-proxy
+	// is IPTABLES or return error
+	// Loading some iptables
+	iptablesCmd := iptables.LoadPreDefinedCommands()
+	if err != nil {
+		logrus.Fatal(err)
+	}
 
-        // iptables saving initial state
-        iptablesInitialState, err := iptables.Save(
-                                &c,
-                                &iptablesCmd,
-                                KPTestContainerName,
-                                "kube-system")
-        if err != nil {
-                logrus.Fatal(err)
-        }
+	// iptables saving initial state
+	iptablesInitialState, err := iptables.Save(
+		&c,
+		&iptablesCmd,
+		KPTestContainerName,
+		"kube-system")
+	if err != nil {
+		logrus.Fatal(err)
+	}
 
 	// START: Namespace
-        _, err = namespace.Exists(&c,
-                        KPTestNamespaceName)
-        if err != nil {
-                err = namespace.Create(&c,
-                        KPTestNamespaceName)
-                if err != nil {
-                        logrus.Fatal("exiting... failed to create: ", err)
-                }
-        }
-        // END: Namespace
-
+	_, err = namespace.Exists(&c,
+		KPTestNamespaceName)
+	if err != nil {
+		err = namespace.Create(&c,
+			KPTestNamespaceName)
+		if err != nil {
+			logrus.Fatal("exiting... failed to create: ", err)
+		}
+	}
+	// END: Namespace
 
 	// Setting Service Name
 	KPTestServiceName := KPTestNamespaceName +
-			"service" +
-			randStr
+		"service" +
+		randStr
 
 	// START: Service
 	// nodePort - a static port assigned on each the node
-        // port - port exposed internally in the cluster
-        // targetPort - the container port to send requests to
-	s := service.Instance {
-	        Name: KPTestServiceName,
-                Namespace: KPTestNamespaceName,
-                LabelKey: "app",
-                LabelValue: labelApp,
-                SelectorKey: "app",
-                SelectorValue: labelApp,
-                PortName: "http",
-                PortProtocol: "TCP",
-                Port: 80,
+	// port - port exposed internally in the cluster
+	// targetPort - the container port to send requests to
+	s := service.Instance{
+		Name:          KPTestServiceName,
+		Namespace:     KPTestNamespaceName,
+		LabelKey:      "app",
+		LabelValue:    labelApp,
+		SelectorKey:   "app",
+		SelectorValue: labelApp,
+		PortName:      "http",
+		PortProtocol:  "TCP",
+		Port:          80,
 	}
 	err = service.CreateLoadBalancer(&c, &s)
 	if err != nil {
@@ -175,20 +174,19 @@ func main() {
 
 	// END: Service
 
-
 	// START: iptables diff
 	iptablesStateAfterEndpointCreated, err := iptables.Save(
-				&c, &iptablesCmd, KPTestContainerName, "kube-system")
-        if err != nil {
+		&c, &iptablesCmd, KPTestContainerName, "kube-system")
+	if err != nil {
 		logrus.Fatal(err)
-        }
+	}
 
 	// Make a diff between two states we collected from iptables
 	out, err = util.DiffCommand(iptablesInitialState.Name(),
-			iptablesStateAfterEndpointCreated.Name())
-        if err != nil {
+		iptablesStateAfterEndpointCreated.Name())
+	if err != nil {
 		logrus.Fatal(err)
-        }
+	}
 
 	if len(string(out)) > 0 {
 		logrus.Infof("%s", string(out))
@@ -204,57 +202,56 @@ func main() {
 	}
 
 	/*
-	ExternalIPService, err := k8devel.GetExternalIPFromService(
-                &c,
-                KPTestServiceName,
-                KPTestNamespaceName)
-        if err != nil {
-                logrus.Fatal("exiting... failed to create: ", err)
-        }*/
-
+		ExternalIPService, err := k8devel.GetExternalIPFromService(
+	                &c,
+	                KPTestServiceName,
+	                KPTestNamespaceName)
+	        if err != nil {
+	                logrus.Fatal("exiting... failed to create: ", err)
+	        }*/
 
 	// START: Pod
 
 	// Creating a POD Behind the service
-	p := pod.Instance {
-		Name: "kpnginxbehindservice",
-		Namespace: KPTestNamespaceName,
-		Image: "nginx:1.14.2",
-		LabelKey: "app",
+	p := pod.Instance{
+		Name:       "kpnginxbehindservice",
+		Namespace:  KPTestNamespaceName,
+		Image:      "nginx:1.14.2",
+		LabelKey:   "app",
 		LabelValue: labelApp,
 	}
 	logrus.Infof("\n")
 	err = pod.Create(&c, &p)
-        if err != nil {
+	if err != nil {
 		logrus.Fatal(err)
-        }
+	}
 	// END: Pod
 	logrus.Info("\n")
 
 	// Creating a POD outside the service (No labels)
 	// So it will try to connect to pod behind the service
 	containerName := "nginxtoconnecttoservice"
-	p = pod.Instance {
-		Name: containerName,
-		Namespace: KPTestNamespaceName,
-		Image: "nginx",
-		LabelKey: "app",
+	p = pod.Instance{
+		Name:       containerName,
+		Namespace:  KPTestNamespaceName,
+		Image:      "nginx",
+		LabelKey:   "app",
 		LabelValue: "foobar",
 	}
 	err = pod.Create(&c, &p)
-        if err != nil {
+	if err != nil {
 		logrus.Fatal(err)
-        }
+	}
 	// END: Pod
 	// START: Execute curl from the pod created to the new service
 	ret, err := curl.ExecuteHTTPReqInsideContainer(
-			&c,
-			containerName,
-			KPTestNamespaceName,
-			"172.17.255.1")
-        if err != nil {
+		&c,
+		containerName,
+		KPTestNamespaceName,
+		"172.17.255.1")
+	if err != nil {
 		logrus.Fatal(err)
-        }
+	}
 	logrus.Infof("%s", ret)
 	color.Green.Println("[Test #2 PASSED]")
 	// END: Execute curl from the pod created to the new service

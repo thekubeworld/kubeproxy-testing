@@ -18,13 +18,13 @@ package main
 
 import (
 	"fmt"
+	"github.com/thekubeworld/k8devel/pkg/client"
 	"github.com/thekubeworld/k8devel/pkg/deployment"
 	"github.com/thekubeworld/k8devel/pkg/service"
-	"github.com/thekubeworld/k8devel/pkg/client"
 	//"github.com/thekubeworld/k8devel/pkg/kubeproxy"
-	"github.com/thekubeworld/k8devel/pkg/pod"
 	"github.com/thekubeworld/k8devel/pkg/curl"
 	"github.com/thekubeworld/k8devel/pkg/namespace"
+	"github.com/thekubeworld/k8devel/pkg/pod"
 	"github.com/thekubeworld/k8devel/pkg/util"
 )
 
@@ -38,15 +38,15 @@ func main() {
 	namespaceName := "kptesting"
 	labelApp := "kptesting"
 
-        c := client.Client{}
+	c := client.Client{}
 	c.Namespace = namespaceName
 	c.NumberMaxOfAttemptsPerTask = 10
-        c.TimeoutTaksInSec = 20
+	c.TimeoutTaksInSec = 20
 
 	// Connect to cluster from:
 	//	- $HOME/kubeconfig (Linux)
 	//	- os.Getenv("USERPROFILE") (Windows)
-        c.Connect()
+	c.Connect()
 
 	// Saving current state of firewall in kube-proxy
 	//fwInitialState, err := kubeproxy.SaveCurrentFirewallState(
@@ -72,11 +72,11 @@ func main() {
 	}
 
 	// START: Deployment
-	d := deployment.Instance {
-		Name: NameDeployment,
-		Namespace: Namespace,
-		Replicas: 1,
-		LabelKey: "app",
+	d := deployment.Instance{
+		Name:       NameDeployment,
+		Namespace:  Namespace,
+		Replicas:   1,
+		LabelKey:   "app",
 		LabelValue: labelApp,
 	}
 
@@ -93,15 +93,15 @@ func main() {
 	// END: Deployment
 
 	// START: Service
-	s := service.Instance {
-		Name: NameService,
-		Namespace: Namespace,
-		LabelKey: "app",
-		LabelValue: labelApp,
-		SelectorKey: "app",
+	s := service.Instance{
+		Name:          NameService,
+		Namespace:     Namespace,
+		LabelKey:      "app",
+		LabelValue:    labelApp,
+		SelectorKey:   "app",
 		SelectorValue: labelApp,
-		ClusterIP: "",
-		Port: 80,
+		ClusterIP:     "",
+		Port:          80,
 	}
 	err = service.CreateClusterIP(&c, &s)
 	if err != nil {
@@ -119,10 +119,10 @@ func main() {
 	// Save firewall state after service, endpoint created
 	// fwAfterEndpointCreated, err := kubeproxy.SaveCurrentFirewallState(
 	//	&c,
-        //        "kube-proxy",
-        //       "kube-proxy",
-        //        "kube-system")
-        //if err != nil {
+	//        "kube-proxy",
+	//       "kube-proxy",
+	//        "kube-system")
+	//if err != nil {
 	//	fmt.Println(err)
 	//}
 
@@ -136,24 +136,24 @@ func main() {
 	// START: Pod
 	// PodCommandInitBash struct for running bash command
 	NameContainer := "kpnginx"
-	p := pod.Instance {
-		Name: NameContainer,
-		Namespace: Namespace,
-		Image: "nginx",
-		LabelKey: "app",
-                LabelValue: labelApp,
+	p := pod.Instance{
+		Name:       NameContainer,
+		Namespace:  Namespace,
+		Image:      "nginx",
+		LabelKey:   "app",
+		LabelValue: labelApp,
 	}
 	pod.Create(&c, &p)
 
 	// START: Execute curl from the pod created to the new service
 	_, err = curl.ExecuteHTTPReqInsideContainer(
-			&c,
-			NameContainer,
-			Namespace,
-			"http://" + IPService)
-        if err != nil {
+		&c,
+		NameContainer,
+		Namespace,
+		"http://"+IPService)
+	if err != nil {
 		fmt.Println(err)
-        }
+	}
 	// Delete namespace
 	namespace.Delete(&c, Namespace)
 }
