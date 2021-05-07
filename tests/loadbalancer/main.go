@@ -202,13 +202,13 @@ func main() {
 	}
 
 	/*
-		ExternalIPService, err := k8devel.GetExternalIPFromService(
-	                &c,
-	                KPTestServiceName,
-	                KPTestNamespaceName)
-	        if err != nil {
-	                logrus.Fatal("exiting... failed to create: ", err)
-	        }*/
+			ExternalIPService, err := k8devel.GetExternalIPFromService(
+		                &c,
+		                KPTestServiceName,
+		                KPTestNamespaceName)
+		        if err != nil {
+		                logrus.Fatal("exiting... failed to create: ", err)
+		        }*/
 
 	// START: Pod
 

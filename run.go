@@ -18,8 +18,8 @@ package main
 
 import (
 	"fmt"
-	"os/exec"
 	"github.com/thekubeworld/k8devel/pkg/emoji"
+	"os/exec"
 )
 
 func main() {
