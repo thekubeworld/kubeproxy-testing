@@ -1,3 +1,5 @@
+[![Go Report Card](https://goreportcard.com/badge/github.com/thekubeworld/kubeproxy-testing)](https://goreportcard.com/report/github.com/thekubeworld/kubeproxy-testing)
+
 # kubeproxy-testing
 A repo for testing kube-proxy and related bits
 
