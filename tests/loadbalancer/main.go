@@ -17,14 +17,16 @@ limitations under the License.
 package main
 
 import (
+	"os/exec"
+
 	"github.com/gookit/color"
 	"github.com/sirupsen/logrus"
-	"os/exec"
 
 	"github.com/thekubeworld/k8devel/pkg/client"
 	"github.com/thekubeworld/k8devel/pkg/curl"
 	"github.com/thekubeworld/k8devel/pkg/diagram"
-	"github.com/thekubeworld/k8devel/pkg/iptables"
+
+	// "github.com/thekubeworld/k8devel/pkg/iptables"
 	"github.com/thekubeworld/k8devel/pkg/kubeproxy"
 	"github.com/thekubeworld/k8devel/pkg/logschema"
 	"github.com/thekubeworld/k8devel/pkg/namespace"
@@ -38,21 +40,21 @@ func main() {
 
 	args := []string{"apply", "-f", "https://raw.githubusercontent.com/metallb/metallb/v0.9.6/manifests/namespace.yaml"}
 	cmd := exec.Command("kubectl", args...)
-	out, err := cmd.Output()
+	_, err := cmd.Output()
 	if err != nil {
 		logrus.Infof("%s", err)
 	}
 
 	args = []string{"apply", "-f", "https://raw.githubusercontent.com/metallb/metallb/v0.9.6/manifests/metallb.yaml"}
 	cmd = exec.Command("kubectl", args...)
-	out, err = cmd.Output()
+	_, err = cmd.Output()
 	if err != nil {
 		logrus.Infof("%s", err)
 	}
 
 	args = []string{"create", "secret", "generic", "-n", "metallb-system", "memberlist", "--from-literal=secretkey=\"$(openssl rand -base64 128)\""}
 	cmd = exec.Command("kubectl", args...)
-	out, err = cmd.Output()
+	_, err = cmd.Output()
 	if err != nil {
 		logrus.Infof("%s", err)
 	}
@@ -102,6 +104,7 @@ func main() {
 	// Detect Kube-proxy mode
 	kpMode, err := kubeproxy.DetectKubeProxyMode(&c,
 		KP,
+		KP,
 		namespaceKP)
 	if err != nil {
 		logrus.Fatal(err)
@@ -110,7 +113,7 @@ func main() {
 	logrus.Infof("Detected kube-proxy mode: %s", kpMode)
 
 	// Setting ContainerName and Namespace
-	KPTestContainerName := kyPods[0]
+	//KPTestContainerName := kyPods[0]
 	KPTestNamespaceName := c.Namespace
 	randStr, err = util.GenerateRandomString(6, "lower")
 	if err != nil {
@@ -120,20 +123,20 @@ func main() {
 	// TODO: Just load the iptables commands if kube-proxy
 	// is IPTABLES or return error
 	// Loading some iptables
-	iptablesCmd := iptables.LoadPreDefinedCommands()
-	if err != nil {
-		logrus.Fatal(err)
-	}
+	//iptablesCmd := iptables.LoadPreDefinedCommands()
+	//if err != nil {
+	//	logrus.Fatal(err)
+	//}
 
 	// iptables saving initial state
-	iptablesInitialState, err := iptables.Save(
-		&c,
-		&iptablesCmd,
-		KPTestContainerName,
-		"kube-system")
-	if err != nil {
-		logrus.Fatal(err)
-	}
+	//iptablesInitialState, err := iptables.Save(
+	//	&c,
+	//	&iptablesCmd,
+	//	KPTestContainerName,
+	//	"kube-system")
+	//if err != nil {
+	//	logrus.Fatal(err)
+	//}
 
 	// START: Namespace
 	_, err = namespace.Exists(&c,
@@ -175,28 +178,28 @@ func main() {
 	// END: Service
 
 	// START: iptables diff
-	iptablesStateAfterEndpointCreated, err := iptables.Save(
-		&c, &iptablesCmd, KPTestContainerName, "kube-system")
-	if err != nil {
-		logrus.Fatal(err)
-	}
+	// iptablesStateAfterEndpointCreated, err := iptables.Save(
+	//	&c, &iptablesCmd, KPTestContainerName, "kube-system")
+	//if err != nil {
+	//	logrus.Fatal(err)
+	//}
 
 	// Make a diff between two states we collected from iptables
-	out, err = util.DiffCommand(iptablesInitialState.Name(),
-		iptablesStateAfterEndpointCreated.Name())
-	if err != nil {
-		logrus.Fatal(err)
-	}
+	//out, err = util.DiffCommand(iptablesInitialState.Name(),
+	//	iptablesStateAfterEndpointCreated.Name())
+	//if err != nil {
+	//	logrus.Fatal(err)
+	//}
 
-	if len(string(out)) > 0 {
-		logrus.Infof("%s", string(out))
-	}
+	//if len(string(out)) > 0 {
+	//	logrus.Infof("%s", string(out))
+	//}
 	// END: iptables diff
 
 	// TODO: use library
 	args = []string{"apply", "-f", "metallbcfg.yaml"}
 	cmd = exec.Command("kubectl", args...)
-	out, err = cmd.Output()
+	_, err = cmd.Output()
 	if err != nil {
 		logrus.Infof("%s", err)
 	}
