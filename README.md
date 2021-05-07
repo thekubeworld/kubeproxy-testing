@@ -1,4 +1,5 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/thekubeworld/kubeproxy-testing)](https://goreportcard.com/report/github.com/thekubeworld/kubeproxy-testing)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
 # kubeproxy-testing
 A repo for testing kube-proxy and related bits
