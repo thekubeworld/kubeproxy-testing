@@ -23,6 +23,7 @@ import (
 	"github.com/thekubeworld/k8devel/pkg/client"
 	"github.com/thekubeworld/k8devel/pkg/curl"
 	"github.com/thekubeworld/k8devel/pkg/deployment"
+	"github.com/thekubeworld/k8devel/pkg/diagram"
 	"github.com/thekubeworld/k8devel/pkg/kubeproxy"
 	"github.com/thekubeworld/k8devel/pkg/namespace"
 	"github.com/thekubeworld/k8devel/pkg/pod"
@@ -31,6 +32,9 @@ import (
 )
 
 func main() {
+	fmt.Printf("kube-proxy tests has started...\n")
+	diagram.ClusterIP()
+
 	// Initial set
 	randStr, err := util.GenerateRandomString(6, "lower")
 	if err != nil {
