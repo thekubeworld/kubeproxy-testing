@@ -18,10 +18,11 @@ package main
 
 import (
 	"fmt"
+	"os"
+
 	"github.com/thekubeworld/k8devel/pkg/client"
 	"github.com/thekubeworld/k8devel/pkg/curl"
 	"github.com/thekubeworld/k8devel/pkg/service"
-	"log"
 
 	"github.com/thekubeworld/k8devel/pkg/deployment"
 	"github.com/thekubeworld/k8devel/pkg/namespace"
@@ -55,10 +56,10 @@ func main() {
 	// START: Namespace
 	err = namespace.Create(&c, Namespace)
 	if err != nil {
-		fmt.Println(
-			"exiting... failed to create: ",
-			err)
+		fmt.Println("exiting... failed to create: ", err)
+		os.Exit(1)
 	}
+	fmt.Printf("namespace created %s\n", Namespace)
 
 	// START: Deployment
 	d := deployment.Instance{
@@ -78,7 +79,9 @@ func main() {
 	err = deployment.Create(&c, &d)
 	if err != nil {
 		fmt.Println("exiting... failed to create: ", err)
+		os.Exit(1)
 	}
+	fmt.Printf("deployment created %s\n", d.Name)
 	// END: Deployment
 
 	//// START: Service
@@ -88,11 +91,12 @@ func main() {
 		ExternalName: domain,
 	}
 	if err := service.CreateExternalName(&c, &s); err != nil {
-		log.Fatal("exiting... failed to create: ", err)
+		fmt.Printf("exiting... failed to create: ", err)
+		os.Exit(1)
 	}
+	fmt.Printf("service created %s\n", s.Name)
 
 	// START: Pod
-	// PodCommandInitBash struct for running bash command
 	NameContainer := "kpnginx"
 	p := pod.Instance{
 		Name:       NameContainer,
@@ -102,6 +106,7 @@ func main() {
 		LabelValue: labelApp,
 	}
 	pod.Create(&c, &p)
+	fmt.Printf("pod created %s\n", p.Name)
 
 	// START: Execute curl from the pod created to the new service
 	_, err = curl.ExecuteHTTPReqInsideContainer(
@@ -110,9 +115,11 @@ func main() {
 		Namespace,
 		fmt.Sprintf("http://%s", domain))
 	if err != nil {
-		log.Fatal(err)
+		fmt.Printf("%s\n", err)
+		os.Exit(1)
 	}
 
 	// Delete namespace
 	namespace.Delete(&c, Namespace)
+	fmt.Printf("Removed namespace %s\n", Namespace)
 }
