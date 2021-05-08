@@ -124,7 +124,9 @@ func main() {
 		fmt.Println(err)
 		os.Exit(1)
 	}
-	fmt.Println("%s", string(out))
+	fmt.Printf("%s", string(out))
+	os.Remove(fwInitialState)
+	os.Remove(fwAfterEndpointCreated)
 
 	// START: Pod
 

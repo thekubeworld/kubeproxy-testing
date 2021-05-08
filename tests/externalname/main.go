@@ -139,6 +139,8 @@ func main() {
 		os.Exit(1)
 	}
 	fmt.Printf("%s", string(out))
+	os.Remove(fwInitialState)
+	os.Remove(fwAfterEndpointCreated)
 
 	// START: Execute curl from the pod created to the new service
 	output, err := curl.ExecuteHTTPReqInsideContainer(
