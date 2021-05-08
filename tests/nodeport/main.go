@@ -20,15 +20,10 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/gookit/color"
-	"github.com/sirupsen/logrus"
-
 	"github.com/thekubeworld/k8devel/pkg/client"
 	"github.com/thekubeworld/k8devel/pkg/curl"
 	"github.com/thekubeworld/k8devel/pkg/diagram"
-
 	"github.com/thekubeworld/k8devel/pkg/kubeproxy"
-	"github.com/thekubeworld/k8devel/pkg/logschema"
 	"github.com/thekubeworld/k8devel/pkg/namespace"
 	"github.com/thekubeworld/k8devel/pkg/node"
 	"github.com/thekubeworld/k8devel/pkg/pod"
@@ -37,14 +32,14 @@ import (
 )
 
 func main() {
-	logschema.SetLogrusLogging()
-	logrus.Infof("kube-proxy tests has started...")
+	fmt.Printf("kube-proxy tests has started...\n")
 	diagram.NodePort()
 
 	// Initial set
 	randStr, err := util.GenerateRandomString(6, "lower")
 	if err != nil {
-		logrus.Fatal(err)
+		fmt.Printf("%s\n", err)
+		os.Exit(1)
 	}
 
 	namespaceName := "kptesting" + randStr
@@ -68,11 +63,12 @@ func main() {
 		KP,
 		namespaceKP)
 	if kyNumberPods < 0 {
-		logrus.Fatal("exiting... unable to find kube-proxy pod..")
+		fmt.Printf("exiting... unable to find kube-proxy pod..\n")
+		os.Exit(1)
 	}
-	logrus.Infof("Found the following kube-proxy pods:")
-	logrus.Infof("\t\tNamespace: %s", namespaceKP)
-	logrus.Infof("\t\t%s", kyPods)
+	fmt.Printf("Found the following kube-proxy pods:\n")
+	fmt.Printf("\t\tNamespace: %s\n", namespaceKP)
+	fmt.Printf("\t\t%s\n", kyPods)
 
 	// Detect Kube-proxy mode
 	kpMode, err := kubeproxy.DetectKubeProxyMode(&c,
@@ -80,16 +76,18 @@ func main() {
 		KP,
 		namespaceKP)
 	if err != nil {
-		logrus.Fatal(err)
+		fmt.Printf("%s\n", err)
+		os.Exit(1)
 	}
-	logrus.Infof("\n")
-	logrus.Infof("Detected kube-proxy mode: %s", kpMode)
+	fmt.Printf("\n")
+	fmt.Printf("Detected kube-proxy mode: %s\n", kpMode)
 
 	// Setting ContainerName and Namespace
 	KPTestNamespaceName := c.Namespace
 	randStr, err = util.GenerateRandomString(6, "lower")
 	if err != nil {
-		logrus.Fatal(err)
+		fmt.Printf("%s\n", err)
+		os.Exit(1)
 	}
 
 	// Saving current state of firewall in kube-proxy
@@ -110,7 +108,8 @@ func main() {
 		err = namespace.Create(&c,
 			KPTestNamespaceName)
 		if err != nil {
-			logrus.Fatal("exiting... failed to create: ", err)
+			fmt.Printf("exiting... failed to create: %s\n", err)
+			os.Exit(1)
 		}
 	}
 	// END: Namespace
@@ -139,12 +138,14 @@ func main() {
 	}
 	err = service.CreateNodePort(&c, &s)
 	if err != nil {
-		logrus.Fatal("exiting... failed to create: ", err)
+		fmt.Printf("exiting... failed to create: %s\n", err)
+		os.Exit(1)
 	}
 
 	IPNodes, err := node.GetIPFromNodes(&c)
 	if err != nil {
-		logrus.Fatal("exiting... failed to create: ", err)
+		fmt.Printf("exiting... failed to create: %s\n", err)
+		os.Exit(1)
 	}
 	// END: Service
 
@@ -177,13 +178,12 @@ func main() {
 		LabelKey:   "app",
 		LabelValue: labelApp,
 	}
-	logrus.Infof("\n")
 	err = pod.Create(&c, &p)
 	if err != nil {
-		logrus.Fatal(err)
+		fmt.Printf("%s\n", err)
+		os.Exit(1)
 	}
 	// END: Pod
-	logrus.Info("\n")
 
 	// Creating a POD outside the service (No labels)
 	// So it will try to connect to pod behind the service
@@ -197,7 +197,8 @@ func main() {
 	}
 	err = pod.Create(&c, &p)
 	if err != nil {
-		logrus.Fatal(err)
+		fmt.Printf("%s\n", err)
+		os.Exit(1)
 	}
 	// END: Pod
 
@@ -208,12 +209,12 @@ func main() {
 		KPTestNamespaceName,
 		IPNodes[0]+":"+fmt.Sprint(s.NodePort))
 	if err != nil {
-		logrus.Fatal(err)
+		fmt.Printf("%s\n", err)
+		os.Exit(1)
 	}
-	logrus.Infof("%s", ret)
-	color.Green.Println("[Test #2 PASSED]")
-	// END: Execute curl from the pod created to the new service
+	fmt.Printf("%s\n", ret)
+	fmt.Printf("PASSED\n")
 
-	// TODO use cleanup function
 	namespace.Delete(&c, KPTestNamespaceName)
+	fmt.Printf("namespace deleted: %s", KPTestNamespaceName)
 }
