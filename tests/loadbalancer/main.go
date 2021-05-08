@@ -17,18 +17,15 @@ limitations under the License.
 package main
 
 import (
+	"fmt"
+	"os"
 	"os/exec"
-
-	"github.com/gookit/color"
-	"github.com/sirupsen/logrus"
 
 	"github.com/thekubeworld/k8devel/pkg/client"
 	"github.com/thekubeworld/k8devel/pkg/curl"
 	"github.com/thekubeworld/k8devel/pkg/diagram"
 
-	// "github.com/thekubeworld/k8devel/pkg/iptables"
 	"github.com/thekubeworld/k8devel/pkg/kubeproxy"
-	"github.com/thekubeworld/k8devel/pkg/logschema"
 	"github.com/thekubeworld/k8devel/pkg/namespace"
 	"github.com/thekubeworld/k8devel/pkg/pod"
 	"github.com/thekubeworld/k8devel/pkg/service"
@@ -36,45 +33,46 @@ import (
 )
 
 func main() {
-	logschema.SetLogrusLogging()
 
 	args := []string{"apply", "-f", "https://raw.githubusercontent.com/metallb/metallb/v0.9.6/manifests/namespace.yaml"}
 	cmd := exec.Command("kubectl", args...)
 	_, err := cmd.Output()
 	if err != nil {
-		logrus.Infof("%s", err)
+		fmt.Printf("cannot create namespace for metallb\n")
+		os.Exit(1)
 	}
 
 	args = []string{"apply", "-f", "https://raw.githubusercontent.com/metallb/metallb/v0.9.6/manifests/metallb.yaml"}
 	cmd = exec.Command("kubectl", args...)
 	_, err = cmd.Output()
 	if err != nil {
-		logrus.Infof("%s", err)
+		fmt.Printf("unable to apply metallb yaml\n")
+		os.Exit(1)
 	}
 
 	args = []string{"create", "secret", "generic", "-n", "metallb-system", "memberlist", "--from-literal=secretkey=\"$(openssl rand -base64 128)\""}
 	cmd = exec.Command("kubectl", args...)
 	_, err = cmd.Output()
 	if err != nil {
-		logrus.Infof("%s", err)
+		fmt.Printf("unable to create secret..\n")
+		os.Exit(1)
 	}
 
-	logrus.Infof("kube-proxy tests has started...")
+	fmt.Printf("kube-proxy tests has started...\n\n")
 
-	logrus.Infof("\n")
-	logrus.Infof("\n")
-	logrus.Infof("Test #3) User's Traffic reach loadbalancer that will")
-	logrus.Infof("route using kubeproxy/iptables to the right service ")
-	logrus.Infof("that has the backend pod                            ")
+	fmt.Printf("Test #3) User's Traffic reach loadbalancer that will\n")
+	fmt.Printf("route using kubeproxy/iptables to the right service \n")
+	fmt.Printf("that has the backend pod                            \n")
 	diagram.LoadBalancer()
 
 	// Initial set
 	randStr, err := util.GenerateRandomString(6, "lower")
 	if err != nil {
-		logrus.Fatal(err)
+		fmt.Printf("%s\n", err)
+		os.Exit(1)
 	}
 
-	namespaceName := "kptesting" + randStr
+	namespaceName := "kptesting"
 	labelApp := "kptesting"
 
 	c := client.Client{}
@@ -86,82 +84,36 @@ func main() {
 	//	- os.Getenv("USERPROFILE") (Windows)
 	c.Connect()
 
-	// kube-proxy is a DaemonSet, it will replicate the pod
-	// data to all nodes. Let's find one pod name to use and
-	// collect data.
-	KP := "kube-proxy"
-	namespaceKP := "kube-system"
-	kyPods, kyNumberPods := pod.FindPodsWithNameContains(&c,
-		KP,
-		namespaceKP)
-	if kyNumberPods < 0 {
-		logrus.Fatal("exiting... unable to find kube-proxy pod..")
-	}
-	logrus.Infof("Found the following kube-proxy pods:")
-	logrus.Infof("\t\tNamespace: %s", namespaceKP)
-	logrus.Infof("\t\t%s", kyPods)
+	// START: kube-proxy variables
+	Namespace := c.Namespace + randStr
+	NameService := "kproxysvc" + randStr
 
-	// Detect Kube-proxy mode
-	kpMode, err := kubeproxy.DetectKubeProxyMode(&c,
-		KP,
-		KP,
-		namespaceKP)
+	// Saving current state of firewall in kube-proxy
+	fwInitialState, err := kubeproxy.SaveCurrentFirewallState(
+		&c,
+		"kube-proxy",
+		"kube-proxy",
+		"kube-system")
 	if err != nil {
-		logrus.Fatal(err)
+		fmt.Println(err)
+		os.Exit(1)
 	}
-	logrus.Infof("\n")
-	logrus.Infof("Detected kube-proxy mode: %s", kpMode)
-
-	// Setting ContainerName and Namespace
-	//KPTestContainerName := kyPods[0]
-	KPTestNamespaceName := c.Namespace
-	randStr, err = util.GenerateRandomString(6, "lower")
-	if err != nil {
-		logrus.Fatal(err)
-	}
-
-	// TODO: Just load the iptables commands if kube-proxy
-	// is IPTABLES or return error
-	// Loading some iptables
-	//iptablesCmd := iptables.LoadPreDefinedCommands()
-	//if err != nil {
-	//	logrus.Fatal(err)
-	//}
-
-	// iptables saving initial state
-	//iptablesInitialState, err := iptables.Save(
-	//	&c,
-	//	&iptablesCmd,
-	//	KPTestContainerName,
-	//	"kube-system")
-	//if err != nil {
-	//	logrus.Fatal(err)
-	//}
 
 	// START: Namespace
-	_, err = namespace.Exists(&c,
-		KPTestNamespaceName)
+	err = namespace.Create(&c, Namespace)
 	if err != nil {
-		err = namespace.Create(&c,
-			KPTestNamespaceName)
-		if err != nil {
-			logrus.Fatal("exiting... failed to create: ", err)
-		}
+		fmt.Printf("%s\n", err)
+		os.Exit(1)
 	}
 	// END: Namespace
-
-	// Setting Service Name
-	KPTestServiceName := KPTestNamespaceName +
-		"service" +
-		randStr
 
 	// START: Service
 	// nodePort - a static port assigned on each the node
 	// port - port exposed internally in the cluster
 	// targetPort - the container port to send requests to
 	s := service.Instance{
-		Name:          KPTestServiceName,
-		Namespace:     KPTestNamespaceName,
+		Name:          NameService,
+		Namespace:     Namespace,
 		LabelKey:      "app",
 		LabelValue:    labelApp,
 		SelectorKey:   "app",
@@ -172,92 +124,90 @@ func main() {
 	}
 	err = service.CreateLoadBalancer(&c, &s)
 	if err != nil {
-		logrus.Fatal("exiting... failed to create: ", err)
+		fmt.Printf("exiting... failed to create: %s\n", err)
+		os.Exit(1)
 	}
 
 	// END: Service
 
-	// START: iptables diff
-	// iptablesStateAfterEndpointCreated, err := iptables.Save(
-	//	&c, &iptablesCmd, KPTestContainerName, "kube-system")
-	//if err != nil {
-	//	logrus.Fatal(err)
-	//}
+	// Save firewall state after service, endpoint created
+	fwAfterEndpointCreated, err := kubeproxy.SaveCurrentFirewallState(
+		&c,
+		"kube-proxy",
+		"kube-proxy",
+		"kube-system")
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
 
-	// Make a diff between two states we collected from iptables
-	//out, err = util.DiffCommand(iptablesInitialState.Name(),
-	//	iptablesStateAfterEndpointCreated.Name())
-	//if err != nil {
-	//	logrus.Fatal(err)
-	//}
-
-	//if len(string(out)) > 0 {
-	//	logrus.Infof("%s", string(out))
-	//}
-	// END: iptables diff
+	// See the difference with diff command
+	out, err := util.DiffCommand(fwInitialState, fwAfterEndpointCreated)
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+	fmt.Printf("%s", string(out))
+	os.Remove(fwInitialState)
+	os.Remove(fwAfterEndpointCreated)
 
 	// TODO: use library
 	args = []string{"apply", "-f", "metallbcfg.yaml"}
 	cmd = exec.Command("kubectl", args...)
 	_, err = cmd.Output()
 	if err != nil {
-		logrus.Infof("%s", err)
+		fmt.Println(err)
+		os.Exit(1)
 	}
 
-	/*
-			ExternalIPService, err := k8devel.GetExternalIPFromService(
-		                &c,
-		                KPTestServiceName,
-		                KPTestNamespaceName)
-		        if err != nil {
-		                logrus.Fatal("exiting... failed to create: ", err)
-		        }*/
-
 	// START: Pod
-
 	// Creating a POD Behind the service
 	p := pod.Instance{
 		Name:       "kpnginxbehindservice",
-		Namespace:  KPTestNamespaceName,
+		Namespace:  Namespace,
 		Image:      "nginx:1.14.2",
 		LabelKey:   "app",
 		LabelValue: labelApp,
 	}
-	logrus.Infof("\n")
+	fmt.Printf("\n")
 	err = pod.Create(&c, &p)
 	if err != nil {
-		logrus.Fatal(err)
+		fmt.Printf("%s\n", err)
+		os.Exit(1)
 	}
 	// END: Pod
-	logrus.Info("\n")
+	fmt.Printf("\n")
 
 	// Creating a POD outside the service (No labels)
 	// So it will try to connect to pod behind the service
 	containerName := "nginxtoconnecttoservice"
 	p = pod.Instance{
 		Name:       containerName,
-		Namespace:  KPTestNamespaceName,
+		Namespace:  Namespace,
 		Image:      "nginx",
 		LabelKey:   "app",
 		LabelValue: "foobar",
 	}
 	err = pod.Create(&c, &p)
 	if err != nil {
-		logrus.Fatal(err)
+		fmt.Printf("%s\n", err)
+		os.Exit(1)
 	}
 	// END: Pod
 	// START: Execute curl from the pod created to the new service
 	ret, err := curl.ExecuteHTTPReqInsideContainer(
 		&c,
 		containerName,
-		KPTestNamespaceName,
+		Namespace,
 		"172.17.255.1")
 	if err != nil {
-		logrus.Fatal(err)
+		fmt.Printf("%s\n", err)
+		os.Exit(1)
 	}
-	logrus.Infof("%s", ret)
-	color.Green.Println("[Test #2 PASSED]")
+	fmt.Printf("%s\n", ret)
+	fmt.Printf("PASSED\n")
 	// END: Execute curl from the pod created to the new service
 
 	namespace.Delete(&c, namespaceName)
+	namespace.Delete(&c, "metallb-system")
 }
