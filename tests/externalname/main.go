@@ -22,12 +22,11 @@ import (
 
 	"github.com/thekubeworld/k8devel/pkg/client"
 	"github.com/thekubeworld/k8devel/pkg/curl"
-	"github.com/thekubeworld/k8devel/pkg/kubeproxy"
-	"github.com/thekubeworld/k8devel/pkg/service"
-
 	"github.com/thekubeworld/k8devel/pkg/deployment"
+	"github.com/thekubeworld/k8devel/pkg/kubeproxy"
 	"github.com/thekubeworld/k8devel/pkg/namespace"
 	"github.com/thekubeworld/k8devel/pkg/pod"
+	"github.com/thekubeworld/k8devel/pkg/service"
 	"github.com/thekubeworld/k8devel/pkg/util"
 )
 
