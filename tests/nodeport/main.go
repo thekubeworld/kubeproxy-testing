@@ -18,6 +18,7 @@ package main
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/gookit/color"
 	"github.com/sirupsen/logrus"
@@ -26,7 +27,6 @@ import (
 	"github.com/thekubeworld/k8devel/pkg/curl"
 	"github.com/thekubeworld/k8devel/pkg/diagram"
 
-	//"github.com/thekubeworld/k8devel/pkg/iptables"
 	"github.com/thekubeworld/k8devel/pkg/kubeproxy"
 	"github.com/thekubeworld/k8devel/pkg/logschema"
 	"github.com/thekubeworld/k8devel/pkg/namespace"
@@ -92,23 +92,16 @@ func main() {
 		logrus.Fatal(err)
 	}
 
-	// TODO: Just load the iptables commands if kube-proxy
-	// is IPTABLES or return error
-	// Loading some iptables
-	//iptablesCmd := iptables.LoadPreDefinedCommands()
-	//if err != nil {
-	//	logrus.Fatal(err)
-	//}
-
-	// iptables saving initial state
-	//iptablesInitialState, err := iptables.Save(
-	//	&c,
-	//	&iptablesCmd,
-	//	KPTestContainerName,
-	//	"kube-system")
-	//if err != nil {
-	//	logrus.Fatal(err)
-	//}
+	// Saving current state of firewall in kube-proxy
+	fwInitialState, err := kubeproxy.SaveCurrentFirewallState(
+		&c,
+		"kube-proxy",
+		"kube-proxy",
+		"kube-system")
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
 
 	// START: Namespace
 	_, err = namespace.Exists(&c,
@@ -155,24 +148,24 @@ func main() {
 	}
 	// END: Service
 
-	// START: iptables diff
-	//iptablesStateAfterEndpointCreated, err := iptables.Save(
-	//	&c, &iptablesCmd, KPTestContainerName, "kube-system")
-	//if err != nil {
-	//	logrus.Fatal(err)
-	//}
+	// Save firewall state after service, endpoint created
+	fwAfterEndpointCreated, err := kubeproxy.SaveCurrentFirewallState(
+		&c,
+		"kube-proxy",
+		"kube-proxy",
+		"kube-system")
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
 
-	// Make a diff between two states we collected from iptables
-	//out, err := util.DiffCommand(iptablesInitialState.Name(),
-	//	iptablesStateAfterEndpointCreated.Name())
-	//if err != nil {
-	//	logrus.Fatal(err)
-	//}
-
-	//if len(string(out)) > 0 {
-	//		logrus.Infof("%s", string(out))
-	//	}
-	// END: iptables diff
+	// See the difference with diff command
+	out, err := util.DiffCommand(fwInitialState, fwAfterEndpointCreated)
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+	fmt.Println("%s", string(out))
 
 	// START: Pod
 
