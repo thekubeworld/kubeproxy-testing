@@ -54,42 +54,6 @@ func main() {
 	//	- os.Getenv("USERPROFILE") (Windows)
 	c.Connect()
 
-	// kube-proxy is a DaemonSet, it will replicate the pod
-	// data to all nodes. Let's find one pod name to use and
-	// collect data.
-	KP := "kube-proxy"
-	namespaceKP := "kube-system"
-	kyPods, kyNumberPods := pod.FindPodsWithNameContains(&c,
-		KP,
-		namespaceKP)
-	if kyNumberPods < 0 {
-		fmt.Printf("exiting... unable to find kube-proxy pod..\n")
-		os.Exit(1)
-	}
-	fmt.Printf("Found the following kube-proxy pods:\n")
-	fmt.Printf("\t\tNamespace: %s\n", namespaceKP)
-	fmt.Printf("\t\t%s\n", kyPods)
-
-	// Detect Kube-proxy mode
-	kpMode, err := kubeproxy.DetectKubeProxyMode(&c,
-		KP,
-		KP,
-		namespaceKP)
-	if err != nil {
-		fmt.Printf("%s\n", err)
-		os.Exit(1)
-	}
-	fmt.Printf("\n")
-	fmt.Printf("Detected kube-proxy mode: %s\n", kpMode)
-
-	// Setting ContainerName and Namespace
-	KPTestNamespaceName := c.Namespace
-	randStr, err = util.GenerateRandomString(6, "lower")
-	if err != nil {
-		fmt.Printf("%s\n", err)
-		os.Exit(1)
-	}
-
 	// Saving current state of firewall in kube-proxy
 	fwInitialState, err := kubeproxy.SaveCurrentFirewallState(
 		&c,
@@ -101,31 +65,25 @@ func main() {
 		os.Exit(1)
 	}
 
+	// START: kube-proxy variables
+	Namespace := c.Namespace + randStr
+	NameService := "kproxysvc" + randStr
+
 	// START: Namespace
-	_, err = namespace.Exists(&c,
-		KPTestNamespaceName)
+	err = namespace.Create(&c, Namespace)
 	if err != nil {
-		err = namespace.Create(&c,
-			KPTestNamespaceName)
-		if err != nil {
-			fmt.Printf("exiting... failed to create: %s\n", err)
-			os.Exit(1)
-		}
+		fmt.Printf("exiting... failed to create: %s\n", err)
+		os.Exit(1)
 	}
 	// END: Namespace
-
-	// Setting Service Name
-	KPTestServiceName := KPTestNamespaceName +
-		"service" +
-		randStr
 
 	// START: Service
 	// nodePort - a static port assigned on each the node
 	// port - port exposed internally in the cluster
 	// targetPort - the container port to send requests to
 	s := service.Instance{
-		Name:          KPTestServiceName,
-		Namespace:     KPTestNamespaceName,
+		Name:          NameService,
+		Namespace:     Namespace,
 		LabelKey:      "app",
 		LabelValue:    labelApp,
 		SelectorKey:   "app",
@@ -173,7 +131,7 @@ func main() {
 	// Creating a POD Behind the service
 	p := pod.Instance{
 		Name:       "kpnginxbehindservice",
-		Namespace:  KPTestNamespaceName,
+		Namespace:  Namespace,
 		Image:      "nginx:1.14.2",
 		LabelKey:   "app",
 		LabelValue: labelApp,
@@ -183,6 +141,7 @@ func main() {
 		fmt.Printf("%s\n", err)
 		os.Exit(1)
 	}
+	fmt.Printf("Pod behind the service created...\n")
 	// END: Pod
 
 	// Creating a POD outside the service (No labels)
@@ -190,7 +149,7 @@ func main() {
 	containerName := "nginxtoconnecttoservice"
 	p = pod.Instance{
 		Name:       containerName,
-		Namespace:  KPTestNamespaceName,
+		Namespace:  Namespace,
 		Image:      "nginx",
 		LabelKey:   "app",
 		LabelValue: "foobar",
@@ -200,13 +159,14 @@ func main() {
 		fmt.Printf("%s\n", err)
 		os.Exit(1)
 	}
+	fmt.Printf("Pod to connect to service created...\n")
 	// END: Pod
 
 	// START: Execute curl from the pod created to the new service
 	ret, err := curl.ExecuteHTTPReqInsideContainer(
 		&c,
 		containerName,
-		KPTestNamespaceName,
+		Namespace,
 		IPNodes[0]+":"+fmt.Sprint(s.NodePort))
 	if err != nil {
 		fmt.Printf("%s\n", err)
@@ -215,6 +175,6 @@ func main() {
 	fmt.Printf("%s\n", ret)
 	fmt.Printf("PASSED\n")
 
-	namespace.Delete(&c, KPTestNamespaceName)
-	fmt.Printf("namespace deleted: %s", KPTestNamespaceName)
+	namespace.Delete(&c, Namespace)
+	fmt.Printf("namespace deleted: %s\n", Namespace)
 }
