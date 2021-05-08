@@ -27,7 +27,7 @@ To see the logs/output from each job, follow these steps:
 
 **Looking to run the tests locally**?  
 
-**1)** Download the [k8devel framework for Kubernetes](https://github.com/thekubeworld/k8devel)
+**1)** Download the [k8devel Go framework for Kubernetes](https://github.com/thekubeworld/k8devel)
 ```
 $ go get github.com/thekubeworld/k8devel
 ```
