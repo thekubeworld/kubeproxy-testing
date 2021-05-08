@@ -22,6 +22,7 @@ import (
 
 	"github.com/thekubeworld/k8devel/pkg/client"
 	"github.com/thekubeworld/k8devel/pkg/curl"
+	"github.com/thekubeworld/k8devel/pkg/kubeproxy"
 	"github.com/thekubeworld/k8devel/pkg/service"
 
 	"github.com/thekubeworld/k8devel/pkg/deployment"
@@ -49,6 +50,17 @@ func main() {
 	c.NumberMaxOfAttemptsPerTask = 10
 	c.TimeoutTaksInSec = 20
 	c.Connect()
+
+	// Saving current state of firewall in kube-proxy
+	fwInitialState, err := kubeproxy.SaveCurrentFirewallState(
+		&c,
+		"kube-proxy",
+		"kube-proxy",
+		"kube-system")
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
 
 	// START: kube-proxy variables
 	Namespace := c.Namespace + randStr
@@ -86,7 +98,7 @@ func main() {
 	fmt.Printf("\t- deployment created %s...\n", d.Name)
 	// END: Deployment
 
-	//// START: Service
+	// START: Service
 	s := service.Instance{
 		Name:         NameService,
 		Namespace:    Namespace,
@@ -110,6 +122,25 @@ func main() {
 	pod.Create(&c, &p)
 	fmt.Printf("\t- pod created %s...\n", p.Name)
 
+	// Save firewall state after service, endpoint created
+	fwAfterEndpointCreated, err := kubeproxy.SaveCurrentFirewallState(
+		&c,
+		"kube-proxy",
+		"kube-proxy",
+		"kube-system")
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+
+	// See the difference with diff command
+	out, err := util.DiffCommand(fwInitialState, fwAfterEndpointCreated)
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+	fmt.Printf("%s", string(out))
+
 	// START: Execute curl from the pod created to the new service
 	output, err := curl.ExecuteHTTPReqInsideContainer(
 		&c,
@@ -123,6 +154,6 @@ func main() {
 	fmt.Printf("%s\n", output)
 	fmt.Printf("PASSED\n")
 	// Delete namespace
-	namespace.Delete(&c, Namespace)
+	//namespace.Delete(&c, Namespace)
 	fmt.Printf("Removed namespace %s...\n", Namespace)
 }
