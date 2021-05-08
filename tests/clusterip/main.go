@@ -143,7 +143,6 @@ func main() {
 	fmt.Println("%s", string(out))
 
 	// START: Pod
-	// PodCommandInitBash struct for running bash command
 	NameContainer := "kpnginx"
 	p := pod.Instance{
 		Name:       NameContainer,
