@@ -34,6 +34,8 @@ const domain = "example.com"
 
 func main() {
 	// Initial set
+	fmt.Printf("Initializing kubeproxy-testing...\n")
+	fmt.Printf("\t- selected ExternalName test...\n")
 	randStr, err := util.GenerateRandomString(6, "lower")
 	if err != nil {
 		fmt.Println(err)
@@ -59,7 +61,7 @@ func main() {
 		fmt.Println("exiting... failed to create: ", err)
 		os.Exit(1)
 	}
-	fmt.Printf("namespace created %s\n", Namespace)
+	fmt.Printf("\t- namespace created %s...\n", Namespace)
 
 	// START: Deployment
 	d := deployment.Instance{
@@ -81,7 +83,7 @@ func main() {
 		fmt.Println("exiting... failed to create: ", err)
 		os.Exit(1)
 	}
-	fmt.Printf("deployment created %s\n", d.Name)
+	fmt.Printf("\t- deployment created %s...\n", d.Name)
 	// END: Deployment
 
 	//// START: Service
@@ -94,7 +96,7 @@ func main() {
 		fmt.Printf("exiting... failed to create: ", err)
 		os.Exit(1)
 	}
-	fmt.Printf("service created %s\n", s.Name)
+	fmt.Printf("\t- service created %s...\n", s.Name)
 
 	// START: Pod
 	NameContainer := "kpnginx"
@@ -106,10 +108,10 @@ func main() {
 		LabelValue: labelApp,
 	}
 	pod.Create(&c, &p)
-	fmt.Printf("pod created %s\n", p.Name)
+	fmt.Printf("\t- pod created %s...\n", p.Name)
 
 	// START: Execute curl from the pod created to the new service
-	_, err = curl.ExecuteHTTPReqInsideContainer(
+	output, err := curl.ExecuteHTTPReqInsideContainer(
 		&c,
 		NameContainer,
 		Namespace,
@@ -118,8 +120,9 @@ func main() {
 		fmt.Printf("%s\n", err)
 		os.Exit(1)
 	}
-
+	fmt.Printf("%s\n", output)
+	fmt.Printf("PASSED\n")
 	// Delete namespace
 	namespace.Delete(&c, Namespace)
-	fmt.Printf("Removed namespace %s\n", Namespace)
+	fmt.Printf("Removed namespace %s...\n", Namespace)
 }
