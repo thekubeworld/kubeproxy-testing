@@ -167,7 +167,7 @@ func main() {
 		fmt.Println(err)
 		os.Exit(1)
 	}
-	fmt.Printf("metallb created configmap %s namespace %s", conf.Name, conf.Namespace)
+	fmt.Printf("metallb created configmap %s namespace %s\n", conf.Name, conf.Namespace)
 
 	// START: Pod
 	// Creating a POD Behind the service
@@ -178,7 +178,6 @@ func main() {
 		LabelKey:   "app",
 		LabelValue: labelApp,
 	}
-	fmt.Printf("\n")
 	err = pod.Create(&c, &p)
 	if err != nil {
 		fmt.Printf("%s\n", err)
