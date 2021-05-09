@@ -47,7 +47,7 @@ func main() {
 	c := client.Client{}
 	c.Namespace = namespaceName
 	c.NumberMaxOfAttemptsPerTask = 10
-	c.TimeoutTaksInSec = 20
+	c.TimeoutTaskInSec = 20
 	c.Connect()
 
 	// Saving current state of firewall in kube-proxy

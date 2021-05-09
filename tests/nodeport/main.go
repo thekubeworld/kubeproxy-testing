@@ -47,7 +47,7 @@ func main() {
 
 	c := client.Client{}
 	c.Namespace = namespaceName
-	c.TimeoutTaksInSec = 20
+	c.TimeoutTaskInSec = 20
 
 	// Connect to cluster from:
 	//	- $HOME/kubeconfig (Linux)
