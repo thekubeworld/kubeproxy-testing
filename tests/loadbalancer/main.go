@@ -19,13 +19,15 @@ package main
 import (
 	"fmt"
 	"os"
-	"os/exec"
 
+	"github.com/thekubeworld/k8devel/pkg/base64"
 	"github.com/thekubeworld/k8devel/pkg/client"
 	"github.com/thekubeworld/k8devel/pkg/curl"
 	"github.com/thekubeworld/k8devel/pkg/diagram"
+	"github.com/thekubeworld/k8devel/pkg/secret"
 
 	"github.com/thekubeworld/k8devel/pkg/kubeproxy"
+	"github.com/thekubeworld/k8devel/pkg/metallb"
 	"github.com/thekubeworld/k8devel/pkg/namespace"
 	"github.com/thekubeworld/k8devel/pkg/pod"
 	"github.com/thekubeworld/k8devel/pkg/service"
@@ -34,43 +36,12 @@ import (
 
 func main() {
 
-	args := []string{"apply", "-f", "https://raw.githubusercontent.com/metallb/metallb/v0.9.6/manifests/namespace.yaml"}
-	cmd := exec.Command("kubectl", args...)
-	_, err := cmd.Output()
-	if err != nil {
-		fmt.Printf("cannot create namespace for metallb\n")
-		os.Exit(1)
-	}
-
-	args = []string{"apply", "-f", "https://raw.githubusercontent.com/metallb/metallb/v0.9.6/manifests/metallb.yaml"}
-	cmd = exec.Command("kubectl", args...)
-	_, err = cmd.Output()
-	if err != nil {
-		fmt.Printf("unable to apply metallb yaml\n")
-		os.Exit(1)
-	}
-
-	args = []string{"create", "secret", "generic", "-n", "metallb-system", "memberlist", "--from-literal=secretkey=\"$(openssl rand -base64 128)\""}
-	cmd = exec.Command("kubectl", args...)
-	_, err = cmd.Output()
-	if err != nil {
-		fmt.Printf("unable to create secret..\n")
-		os.Exit(1)
-	}
-
 	fmt.Printf("kube-proxy tests has started...\n\n")
 
 	fmt.Printf("Test #3) User's Traffic reach loadbalancer that will\n")
 	fmt.Printf("route using kubeproxy/iptables to the right service \n")
 	fmt.Printf("that has the backend pod                            \n")
 	diagram.LoadBalancer()
-
-	// Initial set
-	randStr, err := util.GenerateRandomString(6, "lower")
-	if err != nil {
-		fmt.Printf("%s\n", err)
-		os.Exit(1)
-	}
 
 	namespaceName := "kptesting"
 	labelApp := "kptesting"
@@ -83,6 +54,35 @@ func main() {
 	//	- $HOME/kubeconfig (Linux)
 	//	- os.Getenv("USERPROFILE") (Windows)
 	c.Connect()
+
+	err := metallb.Deploy(&c, "v0.9.6")
+	if err != nil {
+		fmt.Printf("%s\n", err)
+		os.Exit(1)
+	}
+	fmt.Printf("metallb deployed...\n")
+
+	base64Str, _ := base64.GenerateRandomString(128)
+	metallbSecret := secret.Instance{
+		Name:      "memberlist",
+		Namespace: "metallb-system",
+		Type:      "Opaque",
+		Key:       "secretkey",
+		Value:     base64Str,
+	}
+	err = metallb.CreateSecret(&c, &metallbSecret)
+	if err != nil {
+		fmt.Printf("%s\n", err)
+		os.Exit(1)
+	}
+	fmt.Printf("metallb secret created...\n")
+
+	// Initial set
+	randStr, err := util.GenerateRandomString(6, "lower")
+	if err != nil {
+		fmt.Printf("%s\n", err)
+		os.Exit(1)
+	}
 
 	// START: kube-proxy variables
 	Namespace := c.Namespace + randStr
@@ -105,6 +105,7 @@ func main() {
 		fmt.Printf("%s\n", err)
 		os.Exit(1)
 	}
+	fmt.Printf("namespace created %s...\n", Namespace)
 	// END: Namespace
 
 	// START: Service
@@ -127,6 +128,7 @@ func main() {
 		fmt.Printf("exiting... failed to create: %s\n", err)
 		os.Exit(1)
 	}
+	fmt.Printf("Created service Loadbalancer %s\n", s.Name)
 
 	// END: Service
 
@@ -151,14 +153,21 @@ func main() {
 	os.Remove(fwInitialState)
 	os.Remove(fwAfterEndpointCreated)
 
-	// TODO: use library
-	args = []string{"apply", "-f", "metallbcfg.yaml"}
-	cmd = exec.Command("kubectl", args...)
-	_, err = cmd.Output()
+	// Metallb Config
+	conf := metallb.InstanceConfig{
+		Name:                 "config",
+		Namespace:            "metallb-system",
+		ConfigName:           "config",
+		AddressPoolName:      "default",
+		AddressPoolProtocol:  "layer2",
+		AddressPoolAddresses: "172.17.255.1-172.17.255.250",
+	}
+	err = metallb.CreateConfig(&c, &conf)
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
+	fmt.Printf("metallb created configmap %s namespace %s", conf.Name, conf.Namespace)
 
 	// START: Pod
 	// Creating a POD Behind the service
@@ -175,8 +184,8 @@ func main() {
 		fmt.Printf("%s\n", err)
 		os.Exit(1)
 	}
+	fmt.Printf("Pod behind service created %s\n", p.Name)
 	// END: Pod
-	fmt.Printf("\n")
 
 	// Creating a POD outside the service (No labels)
 	// So it will try to connect to pod behind the service
@@ -193,7 +202,9 @@ func main() {
 		fmt.Printf("%s\n", err)
 		os.Exit(1)
 	}
+	fmt.Printf("Pod outside service created %s\n", p.Name)
 	// END: Pod
+
 	// START: Execute curl from the pod created to the new service
 	ret, err := curl.ExecuteHTTPReqInsideContainer(
 		&c,
@@ -208,6 +219,6 @@ func main() {
 	fmt.Printf("PASSED\n")
 	// END: Execute curl from the pod created to the new service
 
-	namespace.Delete(&c, namespaceName)
-	namespace.Delete(&c, "metallb-system")
+	//namespace.Delete(&c, namespaceName)
+	//namespace.Delete(&c, "metallb-system")
 }
