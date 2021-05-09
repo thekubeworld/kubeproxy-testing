@@ -27,7 +27,7 @@ import (
 	"github.com/thekubeworld/k8devel/pkg/secret"
 
 	"github.com/thekubeworld/k8devel/pkg/kubeproxy"
-	"github.com/thekubeworld/k8devel/pkg/metallb"
+	"github.com/thekubeworld/k8devel/pkg/loadbalancer/metallb"
 	"github.com/thekubeworld/k8devel/pkg/namespace"
 	"github.com/thekubeworld/k8devel/pkg/pod"
 	"github.com/thekubeworld/k8devel/pkg/service"
