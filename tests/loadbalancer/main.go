@@ -20,11 +20,11 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/thekubeworld/k8devel/pkg/base64"
 	"github.com/thekubeworld/k8devel/pkg/client"
 	"github.com/thekubeworld/k8devel/pkg/curl"
 	"github.com/thekubeworld/k8devel/pkg/diagram"
 	"github.com/thekubeworld/k8devel/pkg/secret"
+	"github.com/thekubeworld/k8devel/pkg/util/base64"
 
 	"github.com/thekubeworld/k8devel/pkg/kubeproxy"
 	"github.com/thekubeworld/k8devel/pkg/loadbalancer/metallb"
