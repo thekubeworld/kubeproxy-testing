@@ -14,7 +14,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
         with:
-           path: /home/runner/work/_temp/
+           path: main
 
         # Setup Go
       - name: Setup Go
@@ -24,7 +24,7 @@ jobs:
       - uses: actions/checkout@master
         with:
           repository: thekubeworld/k8s-local-dev
-          path: k8s-local-dev
+          path: /home/runner/work/_temp/k8s-local-dev
       - run: |
           GO111MODULE="on" go get sigs.k8s.io/kind@main
           export PATH="$(go env GOPATH)/bin:${PATH}"
@@ -32,14 +32,14 @@ jobs:
           sudo apt install patch -y
           pushd /home/runner/work/_temp/
             curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3
-          chmod 700 get_helm.sh
-          ./get_helm.sh
+            chmod 700 get_helm.sh
+            ./get_helm.sh
           popd 
 
           pushd ./k8s-local-dev
              ./k8s-local-dev kindnetd
           popd
-          pushd ./home/runner/work/_temp/
+          pushd ./main
             go get github.com/moby/spdystream
             go get github.com/thekubeworld/k8devel/pkg/client 
             go get github.com/gookit/color
