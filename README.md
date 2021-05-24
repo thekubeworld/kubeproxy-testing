@@ -2,15 +2,9 @@
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
 # kubeproxy-testing
-A repo for testing kube-proxy and related bits
+This repo made progress and now is part of bigger movement for test kubernetes, see [k8s-service-lb-validator project](https://github.com/K8sbykeshed/k8s-service-lb-validator/)
 
-To see the logs/output from each job, follow these steps:
-
-- Select the artifact from the list above.
-- Click on the workflow/job
-- Go to Artifacts and download logs.zip. It will contain the output logs from the job.
-
-**Looking to run the tests locally**?  
+**Still interested to give it a try**? 
 
 **1)** Download the [k8devel Go framework for Kubernetes](https://github.com/thekubeworld/k8devel)
 ```
