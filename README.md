@@ -2,7 +2,7 @@
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
 # kubeproxy-testing
-This repo made progress and now is part of bigger movement for test kubernetes, see [k8s-service-lb-validator project](https://github.com/K8sbykeshed/k8s-service-lb-validator/)
+This repo made progress and now is part of bigger movement for test kubernetes services, see [k8s-service-lb-validator project](https://github.com/K8sbykeshed/k8s-service-lb-validator/)
 
 **Still interested to give it a try**? 
 
